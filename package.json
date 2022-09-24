@@ -1,0 +1,26 @@
+{
+  "name": "jam-design",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "@smui/button": "^6.1.0",
+    "@smui/icon-button": "^6.1.0",
+    "@smui/layout-grid": "^6.1.0",
+    "@smui/menu": "^6.1.0",
+    "@smui/ripple": "^6.1.0",
+    "@sveltejs/vite-plugin-svelte": "^1.0.2",
+    "chota": "^0.8.0",
+    "svelte": "^3.49.0",
+    "svelte-chota": "^1.8.6",
+    "vite": "^3.1.0"
+  },
+  "dependencies": {
+    "@mdi/js": "^7.0.96"
+  }
+}

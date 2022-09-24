@@ -1,0 +1,203 @@
+   <Col size="1"> 
+        <!-- Mic -->
+        <!-- svelte-ignore a11y-missing-attribute -->
+        <Button primary on:click={toggleRecordStatus}>
+          {#if recordStatus.isRecording}
+            <img src="https://icongr.am/clarity/microphone.svg?size=45&color=f5f0f0" />
+          {/if}
+  
+          {#if !recordStatus.isRecording}
+            <img src="https://icongr.am/entypo/controller-stop.svg?size=45&color=f5f0f0" />
+          {/if}
+        </Button>
+      </Col>
+  
+      <Col size="1">
+        <!-- todo try this play button -->
+        <!-- https://icongr.am/jam/play.svg?size=45&color=currentColor -->
+        <!-- Play -->
+        <!-- svelte-ignore a11y-missing-attribute -->
+        <Button primary on:click={togglePlayStatus}>
+          {#if playStatus.isPlaying}
+            <img src="https://icongr.am/clarity/play.svg?size=45&color=f5f0f0" />
+          {/if}
+  
+          {#if !playStatus.isPlaying}
+            <img src="https://icongr.am/entypo/controller-stop.svg?size=45&color=f5f0f0" />
+          {/if}
+        </Button>
+      </Col>
+
+
+         <Col size="1">
+        <!-- Effects -->
+        <!-- svelte-ignore a11y-missing-attribute -->
+        <Button primary on:click={event => modal_open = true}>
+          <img src="https://icongr.am/entypo/sound-mix.svg?size=45&color=f5f0f0" />
+        </Button>
+      </Col>
+  
+      <Col size="1">
+        <!-- Save -->
+        <!-- svelte-ignore a11y-missing-attribute -->
+        <Button primary>
+          <img src="https://icongr.am/feather/download-cloud.svg?size=45&color=f5f0f0" />
+        </Button>
+      </Col>
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ <Row>
+      <Col size="4"></Col>
+      <Col size="2">
+        <!-- Mic -->
+        <!-- svelte-ignore a11y-missing-attribute -->
+        <button type="button" on:click={toggleRecordStatus}>
+          {#if recordStatus.isRecording}
+            <img src="https://icongr.am/clarity/microphone.svg?size=45&color=f5f0f0" />
+          {/if}
+  
+          {#if !recordStatus.isRecording}
+            <img src="https://icongr.am/entypo/controller-stop.svg?size=45&color=f5f0f0" />
+          {/if}
+        </button>
+      </Col>
+  
+      <Col size="2">
+        <!-- todo try this play button -->
+        <!-- https://icongr.am/jam/play.svg?size=45&color=currentColor -->
+        <!-- Play -->
+        <!-- svelte-ignore a11y-missing-attribute -->
+        <button type="button" on:click={togglePlayStatus}>
+          {#if playStatus.isPlaying}
+            <img src="https://icongr.am/clarity/play.svg?size=45&color=f5f0f0" />
+          {/if}
+  
+          {#if !playStatus.isPlaying}
+            <img src="https://icongr.am/entypo/controller-stop.svg?size=45&color=f5f0f0" />
+          {/if}
+        </button>
+      </Col>
+    </Row>
+
+
+
+    <Row>
+      <Col size="4"></Col>
+      <Col size="2">
+        <!-- Effects -->
+        <!-- svelte-ignore a11y-missing-attribute -->
+        <button type="button" on:click={event => modal_open = true}>
+          <img src="https://icongr.am/entypo/sound-mix.svg?size=45&color=f5f0f0" />
+        </button>
+      </Col>
+  
+      <Col size="2">
+        <!-- Save -->
+        <!-- svelte-ignore a11y-missing-attribute -->
+        <button type="button">
+          <img src="https://icongr.am/feather/download-cloud.svg?size=45&color=f5f0f0" />
+        </button>
+      </Col>
+    </Row>
+
+
+    
+
+  <!-- <div class="row" style="height: 250px;">
+      <div class="col-12" style="color: #3d5e7d; font-size: x-large;">
+        Song Pad -->
+        <!-- svelte-ignore a11y-missing-attribute -->
+        <!-- <img src="https://icongr.am/entypo/beamed-note.svg?size=20&color=currentColor" />
+        
+      </div>
+  </div> -->
+
+  <div class="container">
+    
+  </div>
+
+
+
+
+ // @ts-ignore
+// import {Input,Button, Tag} from 'svelte-chota';
+// @ts-ignore
+// import { mdiChevronDown } from '@mdi/js';
+// let open = false;
+//  const close = () => open=false;
+
+//  import Hidden from './Hidden.svelte';
+// import Hidden from './Hidden.svelte'
+
+  let child;
+
+
+
+
+
+
+ <div class="row">
+    <!-- Mic -->
+    <!-- svelte-ignore a11y-missing-attribute -->
+    <div class="col">
+      <button type="button">
+        <img src="https://icongr.am/clarity/microphone.svg?size=33&color=f5f0f0" />
+      </button>
+    </div>
+    
+   
+   
+     <!-- svelte-ignore a11y-missing-attribute -->
+    <!-- Play -->
+    <div class="col">
+        <button type="button" on:click={event => modal_open = true}>
+          <img src="https://icongr.am/feather/play-circle.svg?size=33&color=f5f0f0" />
+        </button>
+    </div>
+
+   
+  </div>
+
+
+
+
+
+
+
+
+
+
+
+<!-- <Button on:click={event => modal_open = true}>Show modal</Button> -->
+
+  <!-- <button on:click={child.show}>Parent's button</button>
+
+<Hidden bind:this={child} on:show={e => child.shown = e.detail}>
+    <div>Hidden content</div>
+</Hidden>
+
+{#if child && child.shown}
+    <div>Hidden child is shown!</div>
+{/if}
+
+<Button dropdown="Login" bind:open outline>
+  <p><input placeholder="username"></p>
+  <p><input placeholder="password" type="password"></p>
+  <p>
+      <Button clear on:click={close}>Sign up</Button>
+      <Button primary on:click={close}>Sign in</Button>
+  </p>
+</Button> -->
+
+
+
