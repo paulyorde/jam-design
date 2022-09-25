@@ -21,6 +21,9 @@
     "vite": "^3.1.0"
   },
   "dependencies": {
-    "@mdi/js": "^7.0.96"
+    "@mdi/js": "^7.0.96",
+    "tone": "^14.7.77",
+    "audio-encoder": "^1.0.4",
+    "file-saver": "^2.0.5"
   }
 }

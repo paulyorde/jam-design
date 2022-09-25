@@ -1,0 +1,27 @@
+let recordStatus = { 
+    isRecording: true,
+    record: "https://icongr.am/jam/mic-f.svg?size=45&color=f5f0f0",
+    // record: "https://icongr.am/jam/mic-f.svg?size=45&color=f5f0f0",
+    stop: "https://icongr.am/jam/stop.svg?size=45&color=f5f0f0"
+    // src: 
+    // stop: "https://icongr.am/jam/stop.svg?size=45&color=f5f0f0"
+  }
+
+    let recoredSrc =  recordStatus.record
+
+    function toggleRecordStatus() {
+    // recoredSrc = recordStatus.record
+    recordStatus.isRecording = !recordStatus.isRecording
+    
+    if (recordStatus.isRecording) {
+      recoredSrc = recordStatus.record
+    } else {
+      recoredSrc = recordStatus.stop
+    }
+  }
+
+    <!-- Mic -->
+        <!-- svelte-ignore a11y-missing-attribute -->
+        <button on:click={toggleRecordStatus}>
+          <img src={recoredSrc} style="width: 30px;" />
+        </button>

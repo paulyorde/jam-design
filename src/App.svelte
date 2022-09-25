@@ -3,21 +3,147 @@
   import 'chota';
   // @ts-ignore
   import { Modal, Button, Card, Row, Col, Container, Input } from 'svelte-chota';
-  // @ts-ignore
+  import * as Tone from 'tone'
+  // import { saveAs } from 'file-saver'
+  
+  // const encoder = require('audio-encoder')
+  // import * as encoder from 'audio-encoder'
+  
+  let toneRecorder
+  let toneMic
+  let toneContext
+  let toneStreamNode
+  let toneStreamSourceNode
+  let toneRecordBlob
+  let player
+  let atcStream
+
+  //   const _reverb = new Tone.Reverb({"wet": 1,"decay": 1.9,"preDelay": 1.00})
+    // const options = {debug: true, delayTime: "4n", feedBack: .04}
+    // const _pingPong =  new Tone.PingPongDelay({debug: true, delayTime: "4n", feedBack: .04})
+
+
+    function getMediaDevice() {
+      console.log('before toneMic', toneMic)
+      if(!toneMic) {
+       toneMic = new Tone.UserMedia().toDestination();
+       toneContext = Tone.context;
+       toneMic.open().then(stream => {
+        console.log('mic',stream)
+        atcStream = stream
+      });
+    }
+    console.log('arter toneMic', toneMic)
+
+     /**
+      * stream state = started
+      * toneContext/audioContext = running
+     */
+    startRecord()
+  }
+
+    async function startRecord() {
+      console.log('start record stream', atcStream)
+      await Tone.context.resume();
+      toneMic.open().then(stream => {
+        console.log('mic',stream)
+        atcStream = stream
+      });
+      toneRecorder = new Tone.Recorder();
+      toneMic.mute = false
+      toneMic.connect(toneRecorder);
+      
+      await toneRecorder.start()
+      toneStreamNode = toneContext.createMediaStreamDestination();
+      toneStreamSourceNode = toneContext.createMediaStreamSource(toneStreamNode.stream);
+  }
+
+
+  async function stopRecord() {                                                                         
+    toneRecordBlob = await toneRecorder.stop()
+    console.log('stop record stream ', atcStream)
+    console.log('stop record tonecontext::', toneContext)
+    toneMic.disconnect(toneRecorder)
+    toneMic.mute = true
+
+    Tone.context.dispose()
+    toneContext.rawContext.suspend()
+    toneMic.close()
+    // toneRecorder.disconnect()
+    /**
+     * dispose the Stream to get it to stop or mute mic
+     * how to mute mic = mic.mute = true or setMic(true) or destination.mute (speakers)
+     * how to get context state to stopped / suspended = audioCtx.suspend (web api)
+    */
+    // toneRecorder.dispose()
+    // toneContext
+
+
+  }
+  
+
+  async function play() {
+    await Tone.context.resume();
+    toneRecordBlob.arrayBuffer()
+    .then(arrayBuffer => toneContext.decodeAudioData(arrayBuffer))
+    .then(audioBuffer => {
+      player = new Tone.Player({url: audioBuffer}).toDestination()
+      player.start()
+    })
+  }
+
+  function stop() {
+    player.stop()
+    console.log('stop')
+  }
+
+  // async function download() {
+  //  encoder(toneRecordBlob.arrayBuffer().buffer, 'WAV', (v) => console.log('happeing now', v), (blob) => {
+  //   saveAs(blob, 'sound.mp3')
+  // })
+  
+  
+  function downloadAudio() {
+    console.log('download', toneRecordBlob.arrayBuffer)
+    toneRecordBlob.arrayBuffer()
+    .then(arrayBuffer => toneContext.decodeAudioData(arrayBuffer))
+    .then(audioBuffer => {
+      const anchor = document.createElement("a");
+      anchor.download = "recording.webm";
+      anchor.href = audioBuffer;
+      anchor.click();
+    })
+    
+  }
   
   let modal_open = false;
-
-  let recordStatus = { isRecording: true }
-  let playStatus = { isPlaying: true }
+  let recordStatus = { 
+    isRecording: false,
+    record: "https://icongr.am/jam/mic-f.svg?size=45&color=f5f0f0",
+    // record: "https://icongr.am/jam/mic-f.svg?size=45&color=f5f0f0",
+    stop: "https://icongr.am/jam/stop.svg?size=45&color=f5f0f0"
+    // src: 
+    // stop: "https://icongr.am/jam/stop.svg?size=45&color=f5f0f0"
+  }
+  let recoredSrc =  recordStatus.record
+  let playStatus = { 
+    isPlaying: false,
+    play: "https://icongr.am/clarity/play.svg?size=45&color=f5f0f0",
+    stop: "https://icongr.am/jam/stop.svg?size=45&color=f5f0f0"
+  }
   let powerStatus = {
     reverbOn: true,
     delayOn: true,
     chorusOn: true,
-    distortionOn: true
+    distortionOn: true,
+
+    reverbStart: "https://icongr.am/jam/power.svg?size=30&color=5a86c1",
+    reverbStop: "https://icongr.am/jam/power.svg?size=30&color=black"
+    
   }
 
-  let revOn = '5a86c1';
-  let revOff = 'red'
+  let playSrc =  playStatus.play
+  let reverbSrc = powerStatus.reverbStart
 
   /**
      * @param {any} ctrl
@@ -25,7 +151,13 @@
   function togglePowerStatus(ctrl) {
     switch(ctrl) {
       case powerStatus.reverbOn:
+        console.log('reverb', powerStatus.reverbOn)
         powerStatus.reverbOn = !powerStatus.reverbOn
+        if (powerStatus.reverbOn) {
+          reverbSrc = powerStatus.reverbStart
+        } else {
+          reverbSrc = powerStatus.reverbStop
+        }
         break;
       case powerStatus.delayOn:
         powerStatus.delayOn = !powerStatus.delayOn
@@ -36,16 +168,33 @@
       case powerStatus.distortionOn:
         powerStatus.distortionOn = !powerStatus.distortionOn
         break;
-}
+    }
   }
 
   function toggleRecordStatus() {
     recordStatus.isRecording = !recordStatus.isRecording
+    if (recordStatus.isRecording) {
+      recoredSrc = recordStatus.stop
+      getMediaDevice()
+      toneMic.mute = false
+    } else {
+      recoredSrc = recordStatus.record;
+      stopRecord()
+    }
   }
 
   function togglePlayStatus() {
     playStatus.isPlaying = !playStatus.isPlaying
+
+    if (playStatus.isPlaying) {
+      playSrc = playStatus.stop
+      play()
+    } else {
+      playSrc = playStatus.play
+      stop()
+    }
   }
+
 </script>
 
 
@@ -66,30 +215,17 @@
     <Card style="display:flex; justify-content: space-between;">
       <div>
         <!-- svelte-ignore a11y-missing-attribute -->
-        <!-- <button class="powerStatusBtn" on:click={togglePowerStatus(powerStatus.reverbOn)}> -->
-          {#if powerStatus.reverbOn}
-            <button class="powerStatusBtn" on:click={togglePowerStatus(powerStatus.reverbOn)}>
-              <img src="https://icongr.am/jam/power.svg?size=30&color=5a86c1" title="Turn Reverb On/Off" />
-            </button>
-            {/if} 
-  
-          {#if !powerStatus.reverbOn}
-            <!-- svelte-ignore a11y-missing-attribute -->
-            <button class="powerStatusBtn" on:click={togglePowerStatus(powerStatus.reverbOn)}>
-              <img src="https://icongr.am/jam/power.svg?size=30&color=black" title="Turn Reverb On/Off" />
-            </button>
-
-          {/if}
-        <!-- </button> -->
-
+        <Button class="powerStatusBtn" on:click={togglePowerStatus(powerStatus.reverbOn)} style="background: none !important; border: none !important; padding: unset !important;">
+            <img src={reverbSrc} title="Turn Reverb On/Off" />
+         </Button>
         <h6 class="modal-ctrls--effects">Reverb</h6>
       </div>
       <div style="align-self: center">
         <Input type="range" value="9" min="0" max="10"/>
       </div>
       <!-- svelte-ignore a11y-missing-attribute -->
-      <div>
-        <img src="https://icongr.am/jam/info.svg?size=20&color=5a86c1" title="Use slider to control the amount of Reverb"/>
+      <div id="tooltip">
+        <img src="https://icongr.am/jam/info.svg?size=20&color=5a86c1" title="Use slider to control the amount of Reverb" />
       </div>
     </Card>
 
@@ -142,7 +278,7 @@
 
     <!-- Header -->
     <Row style="color: #0d62ab; font-size: x-large; height:200px; font-family: fantasy;margin-top:10px;">
-      <Col size="12">
+      <Col size="6">
           <div style="display: flex;
         align-items: center;">
           <h6>Song Pad</h6>
@@ -166,26 +302,14 @@
         <!-- Mic -->
         <!-- svelte-ignore a11y-missing-attribute -->
         <button on:click={toggleRecordStatus}>
-          {#if recordStatus.isRecording}
-            <img src="https://icongr.am/jam/mic-f.svg?size=45&color=f5f0f0" />
-            <!-- <img src="https://icongr.am/clarity/microphone.svg?size=45&color=f5f0f0" /> -->
-          {/if}
-  
-          {#if !recordStatus.isRecording}
-            <img src="https://icongr.am/jam/stop.svg?size=45&color=f5f0f0" />
-          {/if}
+          <img src={recoredSrc}  />
         </button>
 
         <!-- Play -->
         <!-- svelte-ignore a11y-missing-attribute -->
         <button  on:click={togglePlayStatus}>
-          {#if playStatus.isPlaying}
-            <img src="https://icongr.am/clarity/play.svg?size=45&color=f5f0f0" />
-          {/if}
-  
-          {#if !playStatus.isPlaying}
-            <img src="https://icongr.am/jam/stop.svg?size=45&color=f5f0f0" />
-          {/if}
+          <img src={playSrc}  />
+          
         </button>
       </div>
     </Row>
@@ -193,7 +317,9 @@
     <Row>
       <Col size="5"></Col>
       <div class="app-ctrls--main">
-        <!-- Effects -->
+        <!-- Effects
+          this could be mixer to enhance over all quality of recording and playback.
+        -->
         <!-- svelte-ignore a11y-missing-attribute -->
         <button  on:click={event => modal_open = true}>
           <img src="https://icongr.am/entypo/sound-mix.svg?size=45&color=f5f0f0" />
@@ -201,7 +327,7 @@
 
         <!-- Save -->
         <!-- svelte-ignore a11y-missing-attribute -->
-        <button >
+        <button on:click={downloadAudio}>
           <img src="https://icongr.am/feather/download-cloud.svg?size=45&color=f5f0f0" />
         </button>
       </div>
@@ -216,7 +342,7 @@
 
 
 <style>
-  button {
+  .button, input[type='button']  {
     background-color: #5a86c1 !important;
     border: none;
   }
@@ -229,11 +355,11 @@
     color: #5a86c1;
   }
 
-  .powerStatusBtn {
+  /* .powerStatusBtn {
     background: none !important;
     border: none !important;
     padding: unset !important;
-  }
+  } */
 
   
 
