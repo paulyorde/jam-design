@@ -15,6 +15,7 @@
     "@smui/menu": "^6.1.0",
     "@smui/ripple": "^6.1.0",
     "@sveltejs/vite-plugin-svelte": "^1.0.2",
+    "@types/file-saver": "^2.0.5",
     "chota": "^0.8.0",
     "svelte": "^3.49.0",
     "svelte-chota": "^1.8.6",
@@ -22,8 +23,8 @@
   },
   "dependencies": {
     "@mdi/js": "^7.0.96",
-    "tone": "^14.7.77",
     "audio-encoder": "^1.0.4",
-    "file-saver": "^2.0.5"
+    "file-saver": "^2.0.5",
+    "tone": "^14.7.77"
   }
 }

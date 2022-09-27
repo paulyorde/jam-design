@@ -1,13 +1,20 @@
-<script>
+<script  src="src\assets\audioEncoder.js" type="text/javascript">
   // @ts-ignore
   import 'chota';
   // @ts-ignore
   import { Modal, Button, Card, Row, Col, Container, Input } from 'svelte-chota';
   import * as Tone from 'tone'
-  // import { saveAs } from 'file-saver'
+  import { saveAs } from 'file-saver'
+    import audioEncoder from './assets/audioEncoder';
   
   // const encoder = require('audio-encoder')
   // import * as encoder from 'audio-encoder'
+
+
+  // these object porperties below could be here in main file passed into each component
+  // or used as a store?
+  // usermedia , context happens in main file
+  // recorder in recorder, player in player, etc...
   
   let toneRecorder
   let toneMic
@@ -22,26 +29,34 @@
     // const options = {debug: true, delayTime: "4n", feedBack: .04}
     // const _pingPong =  new Tone.PingPongDelay({debug: true, delayTime: "4n", feedBack: .04})
 
+//467eaf  #1a9ce2  #35bdec  #50e5fe  #199be2
 
+
+     // functional = data in - data out 
+     // 
     function getMediaDevice() {
       console.log('before toneMic', toneMic)
       if(!toneMic) {
+        // pass in { toneMic: userMedia, toneContext: audioContext } 
+        // -> returns copy with updated userMedia to calling method.
        toneMic = new Tone.UserMedia().toDestination();
        toneContext = Tone.context;
        toneMic.open().then(stream => {
         console.log('mic',stream)
         atcStream = stream
-      });
+       });
+      }
+      console.log('arter toneMic', toneMic)
+
+
+      /**
+        * stream state = started
+        * toneContext/audioContext = running
+      */
+      startRecord()
     }
-    console.log('arter toneMic', toneMic)
 
-     /**
-      * stream state = started
-      * toneContext/audioContext = running
-     */
-    startRecord()
-  }
-
+    // pass in userMedia object 
     async function startRecord() {
       console.log('start record stream', atcStream)
       await Tone.context.resume();
@@ -49,16 +64,21 @@
         console.log('mic',stream)
         atcStream = stream
       });
+      // is a new recorder for every mic open neccesary 
+      // instead just disconnect from recorder created on create user media which happens once
       toneRecorder = new Tone.Recorder();
+      // try moving to after stream opens 
       toneMic.mute = false
       toneMic.connect(toneRecorder);
       
       await toneRecorder.start()
+      // need more than one of these?
       toneStreamNode = toneContext.createMediaStreamDestination();
       toneStreamSourceNode = toneContext.createMediaStreamSource(toneStreamNode.stream);
   }
 
 
+  // pass in recorder, mic, context.
   async function stopRecord() {                                                                         
     toneRecordBlob = await toneRecorder.stop()
     console.log('stop record stream ', atcStream)
@@ -85,6 +105,7 @@
   async function play() {
     await Tone.context.resume();
     toneRecordBlob.arrayBuffer()
+  // decode is expensive - does tone make it faster - can this passed to worker
     .then(arrayBuffer => toneContext.decodeAudioData(arrayBuffer))
     .then(audioBuffer => {
       player = new Tone.Player({url: audioBuffer}).toDestination()
@@ -97,10 +118,10 @@
     console.log('stop')
   }
 
-  // async function download() {
-  //  encoder(toneRecordBlob.arrayBuffer().buffer, 'WAV', (v) => console.log('happeing now', v), (blob) => {
-  //   saveAs(blob, 'sound.mp3')
-  // })
+  async function download() {
+   audioEncoder(toneRecordBlob.arrayBuffer().buffer, 'WAV', (v) => console.log('happeing now', v), (blob) => {
+    saveAs(blob, 'sound.mp3')
+  })
   
   
   function downloadAudio() {
@@ -180,6 +201,7 @@
     } else {
       recoredSrc = recordStatus.record;
       stopRecord()
+      // unmute here instead??
     }
   }
 
