@@ -1,12 +1,12 @@
-<script  src="src\assets\audioEncoder.js" type="text/javascript">
+<script>
   // @ts-ignore
   import 'chota';
   // @ts-ignore
   import { Modal, Button, Card, Row, Col, Container, Input } from 'svelte-chota';
   import * as Tone from 'tone'
   import { saveAs } from 'file-saver'
-    import audioEncoder from './assets/audioEncoder';
-  
+  import * as encoder from 'audio-encoder'
+  // import * as encoder from './assets/audioEncoder'
   // const encoder = require('audio-encoder')
   // import * as encoder from 'audio-encoder'
 
@@ -119,23 +119,23 @@
   }
 
   async function download() {
-   audioEncoder(toneRecordBlob.arrayBuffer().buffer, 'WAV', (v) => console.log('happeing now', v), (blob) => {
+    encoder(toneRecordBlob.arrayBuffer().buffer, 'WAV', (v) => console.log('happeing now', v), (blob) => {
     saveAs(blob, 'sound.mp3')
   })
+}
   
-  
-  function downloadAudio() {
-    console.log('download', toneRecordBlob.arrayBuffer)
-    toneRecordBlob.arrayBuffer()
-    .then(arrayBuffer => toneContext.decodeAudioData(arrayBuffer))
-    .then(audioBuffer => {
-      const anchor = document.createElement("a");
-      anchor.download = "recording.webm";
-      anchor.href = audioBuffer;
-      anchor.click();
-    })
+  // function downloadAudio() {
+  //   console.log('download', toneRecordBlob.arrayBuffer)
+  //   toneRecordBlob.arrayBuffer()
+  //   .then(arrayBuffer => toneContext.decodeAudioData(arrayBuffer))
+  //   .then(audioBuffer => {
+  //     const anchor = document.createElement("a");
+  //     anchor.download = "recording.webm";
+  //     anchor.href = audioBuffer;
+  //     anchor.click();
+  //   })
     
-  }
+  // }
   
   let modal_open = false;
   let recordStatus = { 
@@ -349,7 +349,7 @@
 
         <!-- Save -->
         <!-- svelte-ignore a11y-missing-attribute -->
-        <button on:click={downloadAudio}>
+        <button on:click={download}>
           <img src="https://icongr.am/feather/download-cloud.svg?size=45&color=f5f0f0" />
         </button>
       </div>
