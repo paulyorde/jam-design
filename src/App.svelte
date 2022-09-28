@@ -108,6 +108,8 @@
   // decode is expensive - does tone make it faster - can this passed to worker
     .then(arrayBuffer => toneContext.decodeAudioData(arrayBuffer))
     .then(audioBuffer => {
+     console.log('blob', audioBuffer)
+
       player = new Tone.Player({url: audioBuffer}).toDestination()
       player.start()
     })
@@ -119,9 +121,18 @@
   }
 
   async function download() {
-    encoder(toneRecordBlob.arrayBuffer().buffer, 'WAV', (v) => console.log('happeing now', v), (blob) => {
+    console.log('blob')
+    toneRecordBlob.arrayBuffer()
+    .then(arrayBuffer => toneContext.decodeAudioData(arrayBuffer))
+    .then(audioBuffer => {
+     console.log('blob', audioBuffer)
+
+      // @ts-ignore
+    encoder(audioBuffer, 'WAV', (v) => console.log('happeing now', v), (blob) => {
     saveAs(blob, 'sound.mp3')
   })
+    })
+   
 }
   
   // function downloadAudio() {
