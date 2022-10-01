@@ -34,17 +34,20 @@
 
      // functional = data in - data out 
      // 
-    function getMediaDevice() {
+    async function getMediaDevice() {
+      await Tone.start()
       console.log('before toneMic', toneMic)
       if(!toneMic) {
         // pass in { toneMic: userMedia, toneContext: audioContext } 
         // -> returns copy with updated userMedia to calling method.
        toneMic = new Tone.UserMedia().toDestination();
        toneContext = Tone.context;
-       toneMic.open().then(stream => {
-        console.log('mic',stream)
-        atcStream = stream
-       });
+       toneRecorder = new Tone.Recorder();
+
+      //  toneMic.open().then(stream => {
+      //   console.log('mic',stream)
+      //   atcStream = stream
+      //  });
       }
       console.log('arter toneMic', toneMic)
 
@@ -59,22 +62,23 @@
     // pass in userMedia object 
     async function startRecord() {
       console.log('start record stream', atcStream)
-      await Tone.context.resume();
-      toneMic.open().then(stream => {
+      // if !mic
+      toneMic.open().then((stream) => {
         console.log('mic',stream)
         atcStream = stream
+        // toneMic.mute = false
       });
       // is a new recorder for every mic open neccesary 
       // instead just disconnect from recorder created on create user media which happens once
-      toneRecorder = new Tone.Recorder();
+      // toneRecorder = new Tone.Recorder();
       // try moving to after stream opens 
-      toneMic.mute = false
       toneMic.connect(toneRecorder);
+      await Tone.context.resume();
       
       await toneRecorder.start()
-      // need more than one of these?
-      toneStreamNode = toneContext.createMediaStreamDestination();
-      toneStreamSourceNode = toneContext.createMediaStreamSource(toneStreamNode.stream);
+    
+      // toneStreamNode = toneContext.createMediaStreamDestination();
+      // toneStreamSourceNode = toneContext.createMediaStreamSource(toneStreamNode.stream);
   }
 
 
@@ -83,9 +87,10 @@
     toneRecordBlob = await toneRecorder.stop()
     console.log('stop record stream ', atcStream)
     console.log('stop record tonecontext::', toneContext)
-    toneMic.disconnect(toneRecorder)
-    toneMic.mute = true
-
+    /**
+     * Cleanup
+    */
+    await toneMic.disconnect(toneRecorder)
     Tone.context.dispose()
     toneContext.rawContext.suspend()
     toneMic.close()
@@ -103,13 +108,14 @@
   
 
   async function play() {
-    await Tone.context.resume();
     toneRecordBlob.arrayBuffer()
-  // decode is expensive - does tone make it faster - can this passed to worker
+    // decode is expensive - does tone make it faster - can this passed to worker
     .then(arrayBuffer => toneContext.decodeAudioData(arrayBuffer))
-    .then(audioBuffer => {
-     console.log('blob', audioBuffer)
+    .then(async audioBuffer => {
+      console.log('blob', audioBuffer)
+      await Tone.context.resume();
 
+      // not need to be new player each time.
       player = new Tone.Player({url: audioBuffer}).toDestination()
       player.start()
     })
@@ -118,8 +124,15 @@
   function stop() {
     player.stop()
     console.log('stop')
+    toneContext.rawContext.suspend()
   }
 
+  /**
+   * V2
+   * download to computer 
+   * OR
+   * dowload to track pad (vrs, chrs, bridge, etc)
+   */
   async function download() {
     console.log('blob')
     toneRecordBlob.arrayBuffer()
@@ -169,20 +182,17 @@
     chorusOn: true,
     distortionOn: true,
 
-    reverbStart: "https://icongr.am/jam/power.svg?size=30&color=5a86c1",
+    reverbStart: "https://icongr.am/jam/power.svg?size=30&color=f5f0f0",
     reverbStop: "https://icongr.am/jam/power.svg?size=30&color=black"
     
   }
-
   let playSrc =  playStatus.play
   let reverbSrc = powerStatus.reverbStart
 
-  /**
-     * @param {any} ctrl
-     */
   function togglePowerStatus(ctrl) {
     switch(ctrl) {
       case powerStatus.reverbOn:
+        toggleReverb()
         console.log('reverb', powerStatus.reverbOn)
         powerStatus.reverbOn = !powerStatus.reverbOn
         if (powerStatus.reverbOn) {
@@ -192,12 +202,15 @@
         }
         break;
       case powerStatus.delayOn:
+        toggleDelay()
         powerStatus.delayOn = !powerStatus.delayOn
         break;
       case powerStatus.chorusOn:
+        toggleChours()
         powerStatus.chorusOn = !powerStatus.chorusOn
         break;
       case powerStatus.distortionOn:
+        toggleDistortion()
         powerStatus.distortionOn = !powerStatus.distortionOn
         break;
     }
@@ -212,7 +225,7 @@
     } else {
       recoredSrc = recordStatus.record;
       stopRecord()
-      // unmute here instead??
+      toneMic.mute = true
     }
   }
 
@@ -226,6 +239,41 @@
       playSrc = playStatus.play
       stop()
     }
+  }
+
+  /**
+   * todo 
+   * start effects first , then start record.
+   */
+  function toggleReverb() {
+    const reverb = new Tone.Reverb({"wet": 1,"decay": 1.9,"preDelay": 0}).toDestination()
+    toneMic.connect(reverb)
+    reverb.connect(toneRecorder)
+  }
+
+  function toggleDelay() {
+    console.log('delay')
+    const options = {debug: true, delayTime: "4n", feedBack: .4}
+    const pingPong =  new Tone.PingPongDelay(options).toDestination()
+    toneMic.connect(pingPong)
+    pingPong.connect(toneRecorder)
+  }
+
+  function toggleChours() {
+    console.log('chours')
+    const chorus = new Tone.Chorus(10, 0, 1).toDestination()
+    toneMic.connect(chorus)
+    chorus.connect(toneRecorder)
+  }
+
+  /**
+   * https://tonejs.github.io/docs/14.7.77/Distortion
+   * todo: research options overtone , input:gain, wet/dry to fix latency
+   */
+  function toggleDistortion() {
+    const dist = new Tone.Distortion(1).toDestination();
+    toneMic.connect(dist)
+    dist.connect(toneRecorder)
   }
 
 </script>
@@ -242,63 +290,55 @@
 
 <main>
   <!-- Effect Controls -->
-<Modal bind:open={modal_open}>
- 
-  <!-- Reverb -->
-    <Card style="display:flex; justify-content: space-between;">
-      <div>
-        <!-- svelte-ignore a11y-missing-attribute -->
-        <Button class="powerStatusBtn" on:click={togglePowerStatus(powerStatus.reverbOn)} style="background: none !important; border: none !important; padding: unset !important;">
-            <img src={reverbSrc} title="Turn Reverb On/Off" />
-         </Button>
-        <h6 class="modal-ctrls--effects">Reverb</h6>
-      </div>
-      <div style="align-self: center">
-        <Input type="range" value="9" min="0" max="10"/>
-      </div>
-      <!-- svelte-ignore a11y-missing-attribute -->
-      <div id="tooltip">
-        <img src="https://icongr.am/jam/info.svg?size=20&color=5a86c1" title="Use slider to control the amount of Reverb" />
-      </div>
-    </Card>
+  <Modal class="modal-m" bind:open={modal_open}>
+      <!-- Reverb Delay-->
+      <!-- <Card style="display:flex; justify-content: space-between;"> -->
+      <Container style="max-width:300px">
+        <Row style="margin-bottom:10px">
+          <!-- <Col size="6"></Col> -->
+          <Col size=12>
+            <div class="app-ctrls--main foo">
+              <!-- svelte-ignore a11y-missing-attribute -->
+              <button class="powerStatusBtn foo" on:click={toggleReverb} >
+                <img src={reverbSrc} title="Turn Reverb On/Off" />
+                <h6 class="modal-ctrls--effects">Reverb</h6>
+              </button>
 
-    <!-- Delay -->
-    <Card style="display:flex; justify-content: space-between;">
-      <div>
-        <img src="https://icongr.am/jam/power.svg?size=30&color=5a86c1" />
-        <h6 class="modal-ctrls--effects">Delay</h6>
-      </div>
-      <div style="align-self: center;">
-        <Input type="range" value="9" min="0" max="10"/>
-      </div>
-      <div><img src="https://icongr.am/jam/info.svg?size=20&color=5a86c1" /></div>
-    </Card>
+              <button on:click={toggleDelay} class="powerStatusBtn foo" >
+                <!-- svelte-ignore a11y-missing-attribute -->
+                <img src="https://icongr.am/jam/power.svg?size=30&color=f5f0f0" />
+                <h6 class="modal-ctrls--effects">Delay</h6>
+              </button>
+            </div>
+          </Col>
+        </Row>
+      </Container>
 
-    <!-- Chorus -->
-    <Card style="display:flex; justify-content: space-between;">
-      <div>
-        <img src="https://icongr.am/jam/power.svg?size=30&color=5a86c1" />
-        <h6 class="modal-ctrls--effects">Chorus</h6>
-      </div>
-      <div style="align-self: center;">
-        <Input type="range" value="9" min="0" max="10"/>
-      </div>
-      <div><img src="https://icongr.am/jam/info.svg?size=20&color=5a86c1" /></div>
-    </Card>
+      <!-- Chorus Distortion -->
+      <Container style="max-width: 300px;">
+        <Row style="margin-bottom:10px">
+          <!-- <Col size="6"></Col> -->
+          <Col size=12>
+            <div class="app-ctrls--main foo">
+              <button on:click={toggleChours} class="powerStatusBtn foo" >
+                <!-- svelte-ignore a11y-missing-attribute -->
+                <img src="https://icongr.am/jam/power.svg?size=30&color=5a86c1" />
+                <h6 class="modal-ctrls--effects">Chorus</h6>
+              </button>
+  
+              <button on:click={toggleDistortion} class="powerStatusBtn foo" >
+                <!-- svelte-ignore a11y-missing-attribute -->
+                <img src="https://icongr.am/jam/power.svg?size=30&color=5a86c1" />
+                <h6 class="modal-ctrls--effects">Distortion</h6>
+              </button>
+            </div>
+          </Col>
+        </Row>
+      </Container>
+    
+  </Modal>
 
-    <!-- Distortion -->
-    <Card style="display:flex; justify-content: space-between;">
-      <div>
-        <img src="https://icongr.am/jam/power.svg?size=30&color=5a86c1" />
-        <h6 class="modal-ctrls--effects">Distortion</h6>
-      </div>
-      <div style="align-self: center;">
-        <Input type="range" value="9" min="0" max="10"/>
-      </div>
-      <div><img src="https://icongr.am/jam/info.svg?size=20&color=5a86c1" /></div>
-    </Card>
 
-</Modal>
   <!--Row header logo settings etc -->
   <Container>
     <!-- background: rgb(102 133 161);
@@ -310,7 +350,7 @@
         -->
 
     <!-- Header -->
-    <Row style="color: #0d62ab; font-size: x-large; height:200px; font-family: fantasy;margin-top:10px;">
+    <Row style="color: #5b87c2; font-size: x-large; height:200px; font-family: fantasy;margin-top:10px;">
       <Col size="6">
           <div style="display: flex;
         align-items: center;">
@@ -324,14 +364,12 @@
     </Row>
   </Container>
 
-  <!-- controls -->
+  <!-- Main Controls -->
   <Container>
     <!-- Mic Play -->
     <Row style="margin-bottom:10px">
       <Col size="5"></Col>
-
       <div class="app-ctrls--main">
-        
         <!-- Mic -->
         <!-- svelte-ignore a11y-missing-attribute -->
         <button on:click={toggleRecordStatus}>
@@ -342,7 +380,6 @@
         <!-- svelte-ignore a11y-missing-attribute -->
         <button  on:click={togglePlayStatus}>
           <img src={playSrc}  />
-          
         </button>
       </div>
     </Row>
@@ -364,10 +401,53 @@
           <img src="https://icongr.am/feather/download-cloud.svg?size=45&color=f5f0f0" />
         </button>
       </div>
-      <Col size="4"></Col>
-   
+      <!-- <Col size="4"></Col> -->
     </Row>
   </Container>
+
+  <!-- Reverb Delay-->
+      <!-- <Card style="display:flex; justify-content: space-between;"> -->
+        <Container>
+          <Row style="margin-bottom:10px">
+            <!-- <Col size="6"></Col> -->
+            <Col size="5"></Col>
+              <div class="app-ctrls--main">
+                <!-- svelte-ignore a11y-missing-attribute -->
+                <button on:click={toggleReverb}>
+                  <img src={reverbSrc} title="Turn Reverb On/Off" />
+                  <h6 class="modal-ctrls--effects">Reverb</h6>
+                </button>
+  
+                <button on:click={toggleDelay}>
+                  <!-- svelte-ignore a11y-missing-attribute -->
+                  <img src="https://icongr.am/jam/power.svg?size=30&color=f5f0f0" />
+                  <h6 class="modal-ctrls--effects">Delay</h6>
+                </button>
+              </div>
+          </Row>
+        <!-- </Container> -->
+  
+        <!-- Chorus Distortion -->
+        <!-- <Container style="max-width: 300px;"> -->
+          <Row style="margin-bottom:10px">
+            <!-- <Col size="6"></Col> -->
+            <Col size="5"></Col>
+              <div class="app-ctrls--main foo">
+                <button on:click={toggleChours}>
+                  <!-- svelte-ignore a11y-missing-attribute -->
+                  <img src="https://icongr.am/jam/power.svg?size=30&color=f5f0f0" />
+                  <h6 class="modal-ctrls--effects">Chorus</h6>
+                </button>
+    
+                <button on:click={toggleDistortion}>
+                  <!-- svelte-ignore a11y-missing-attribute -->
+                  <img src="https://icongr.am/jam/power.svg?size=30&color=f5f0f0" />
+                  <h6 class="modal-ctrls--effects">Distortion</h6>
+                </button>
+              </div>
+              <Col size="4"></Col>
+          </Row>
+        </Container>
 
   <!-- footer links contact etc. -->
 
@@ -375,17 +455,36 @@
 
 
 <style>
-  .button, input[type='button']  {
+  .button, input[type='button'], input[type=reset], input[type=submit], button  {
     background-color: #5a86c1 !important;
     border: none;
   }
+
+  .modal.s-wBJb4QHrfejj {
+    padding-top: 10px !important;
+    min-width: 300px !important;
+    display: flex !important;
+    align-items: center !important;
+    background: #12395bed !important;
+    top: 36% !important;
+    left: 54% !important;
+  }
+
+  /* .background.s-wBJb4QHrfejj {
+    background-color: none !important;
+  } */
 
   .app-ctrls--main {
     padding-right: 10px;
   }
 
+  .foo {
+    margin:10px;
+    background: none !important;
+  }
+
   .modal-ctrls--effects {
-    color: #5a86c1;
+    color: #f5f0f0;
   }
 
   /* .powerStatusBtn {
@@ -434,5 +533,6 @@
   --font-color: #333333;
   --font-family-sans: sans-serif;
   --font-family-mono: monaco, "Consolas", "Lucida Console", monospace;
+  
     }
 </style>

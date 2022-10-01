@@ -1,0 +1,44 @@
+    <!-- <div style="align-self: center">
+        <Input type="range" value="9" min="0" max="10"/>
+      </div> -->
+      <!-- svelte-ignore a11y-missing-attribute -->
+      <!-- <div id="tooltip">
+        <img src="https://icongr.am/jam/info.svg?size=20&color=5a86c1" title="Use slider to control the amount of Reverb" />
+      </div> -->
+    <!-- </Card> -->
+
+    <!-- Delay -->
+    <!-- <Card style="display:flex; justify-content: space-between;"> -->
+      <!-- <div>
+        <img src="https://icongr.am/jam/power.svg?size=30&color=5a86c1" />
+        <h6 class="modal-ctrls--effects">Delay</h6>
+      </div> -->
+      <!-- <div style="align-self: center;">
+        <Input type="range" value="9" min="0" max="10"/>
+      </div>
+      <div><img src="https://icongr.am/jam/info.svg?size=20&color=5a86c1" /></div> -->
+    <!-- </Card> -->
+
+    <!-- Chorus -->
+    <!-- <Card style="display:flex; justify-content: space-between;"> -->
+      <!-- <div>
+        <img src="https://icongr.am/jam/power.svg?size=30&color=5a86c1" />
+        <h6 class="modal-ctrls--effects">Chorus</h6>
+      </div> -->
+      <!-- <div style="align-self: center;">
+        <Input type="range" value="9" min="0" max="10"/>
+      </div>
+      <div><img src="https://icongr.am/jam/info.svg?size=20&color=5a86c1" /></div> -->
+    <!-- </Card> -->
+
+    <!-- Distortion -->
+    <!-- <Card style="display:flex; justify-content: space-between;"> -->
+      <!-- <div>
+        <img src="https://icongr.am/jam/power.svg?size=30&color=5a86c1" />
+        <h6 class="modal-ctrls--effects">Distortion</h6>
+      </div> -->
+      <!-- <div style="align-self: center;">
+        <Input type="range" value="9" min="0" max="10"/>
+      </div>
+      <div><img src="https://icongr.am/jam/info.svg?size=20&color=5a86c1" /></div> -->
+    <!-- </Card> -->
