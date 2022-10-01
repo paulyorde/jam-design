@@ -1,3 +1,74 @@
+ <!-- Effect Controls -->
+  <Modal class="modal-m" bind:open={modal_open}>
+    <!-- Reverb Delay-->
+    <!-- <Card style="display:flex; justify-content: space-between;"> -->
+    <Container style="max-width:300px">
+      <Row style="margin-bottom:10px">
+        <!-- <Col size="6"></Col> -->
+        <Col size="12">
+          <div class="app-ctrls--main foo">
+            <!-- svelte-ignore a11y-missing-attribute -->
+            <button on:click={toggleReverb}>
+              <img src={reverbSrc} title="Turn Reverb On/Off" />
+              <h6 class="modal-ctrls--effects">Reverb</h6>
+            </button>
+
+            <button on:click={toggleDelay}>
+              <!-- svelte-ignore a11y-missing-attribute -->
+              <img src="https://icongr.am/jam/power.svg?size=30&color=f5f0f0" />
+              <h6 class="modal-ctrls--effects">Delay</h6>
+            </button>
+          </div>
+        </Col>
+      </Row>
+    </Container>
+
+    <!-- Chorus Distortion -->
+    <Container style="max-width: 300px;">
+      <Row style="margin-bottom:10px">
+        <!-- <Col size="6"></Col> -->
+        <Col size="12">
+          <div class="app-ctrls--main foo">
+            <button on:click={toggleChours}>
+              <!-- svelte-ignore a11y-missing-attribute -->
+              <img src="https://icongr.am/jam/power.svg?size=30&color=5a86c1" />
+              <h6 class="modal-ctrls--effects">Chorus</h6>
+            </button>
+
+            <button on:click={toggleDistortion}>
+              <!-- svelte-ignore a11y-missing-attribute -->
+              <img src="https://icongr.am/jam/power.svg?size=30&color=5a86c1" />
+              <h6 class="modal-ctrls--effects">Distortion</h6>
+            </button>
+          </div>
+        </Col>
+      </Row>
+    </Container>
+  </Modal>  
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     <!-- <div style="align-self: center">
         <Input type="range" value="9" min="0" max="10"/>
       </div> -->

@@ -1,0 +1,28 @@
+ 
+
+  function togglePowerStatus(ctrl) {
+    switch (ctrl) {
+      case powerStatus.reverbOn:
+        toggleReverb();
+        console.log("reverb", powerStatus.reverbOn);
+        powerStatus.reverbOn = !powerStatus.reverbOn;
+        if (powerStatus.reverbOn) {
+          reverbSrc = powerStatus.reverbStart;
+        } else {
+          reverbSrc = powerStatus.reverbStop;
+        }
+        break;
+      case powerStatus.delayOn:
+        toggleDelay();
+        powerStatus.delayOn = !powerStatus.delayOn;
+        break;
+      case powerStatus.chorusOn:
+        toggleChours();
+        powerStatus.chorusOn = !powerStatus.chorusOn;
+        break;
+      case powerStatus.distortionOn:
+        toggleDistortion();
+        powerStatus.distortionOn = !powerStatus.distortionOn;
+        break;
+    }
+  }
