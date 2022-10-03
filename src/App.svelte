@@ -1,7 +1,5 @@
 <script>
-  // @ts-ignore
   import "chota";
-  // @ts-ignore
   import {
     Modal,
     Button,
@@ -14,9 +12,6 @@
   import * as Tone from "tone";
   import { saveAs } from "file-saver";
   import * as encoder from "audio-encoder";
-  // import * as encoder from './assets/audioEncoder'
-  // const encoder = require('audio-encoder')
-  // import * as encoder from 'audio-encoder'
 
   // these object porperties below could be here in main file passed into each component
   // or used as a store?
@@ -56,46 +51,29 @@
     chorusOn: false,
     distortionOn: false,
 
-    reverbStart: "https://icongr.am/jam/power.svg?size=30&color=f5f0f0",
-    reverbStop: "https://icongr.am/jam/power.svg?size=30&color=black",
+    reverbImgSrcOff: "https://icongr.am/jam/power.svg?size=30&color=black",
+    reverbImgSrcOn: "https://icongr.am/jam/power.svg?size=30&color=f5f0f0",
   };
   let playSrc = playStatus.play;
-  let reverbSrc = powerStatus.reverbStart;
-
-  //   const _reverb = new Tone.Reverb({"wet": 1,"decay": 1.9,"preDelay": 1.00})
-  // const options = {debug: true, delayTime: "4n", feedBack: .04}
-  // const _pingPong =  new Tone.PingPongDelay({debug: true, delayTime: "4n", feedBack: .04})
-
-  //467eaf  #1a9ce2  #35bdec  #50e5fe  #199be2
-
-  // functional = data in - data out
-  //
-
-  // listenr 
-  // $micOn
-  // toneMic.open().then((stream) => {
-  //       console.log("mic", stream);
-  //       atcStream = stream;
-  //     });
-  // $: doubled = count * 2;
-
+  let reverbImgSrc = powerStatus.reverbImgSrcOn;
   
    $: if(powerStatus.reverbOn) {
     console.log('reverb listener start')
-    
+    reverbImgSrc = powerStatus.reverbImgSrcOff;
     if(toneMic) {
       toneMic.connect(reverb);
       console.log('reverb listener: on should be true', powerStatus.reverbOn)
     }
 
    } else {
+    reverbImgSrc = powerStatus.reverbImgSrcOn
+
     if(toneMic) {
       toneMic.disconnect(reverb)
       reverb.dispose()
+      reverb = null
       console.log('reverb listener on should be false', powerStatus.reverbOn)
     }
-    // console.log('power listener off', powerStatus.micOn)
-
    }
 
    $: if(powerStatus.micOn) {
@@ -107,13 +85,6 @@
       toneMic.open().then((stream) => {
         console.log("mic listener on should be true", toneMic);
         atcStream = stream;
-
-        // reverb = new Tone.Reverb({
-        // wet: 1,
-        // decay: 1.9,
-        // preDelay: 0,
-        // }).toDestination();
-
         });
       }
      
@@ -266,44 +237,29 @@
   /**
    * todo
    * start effects first , then start record.
+   * 
+   * in recorder listener: if(reverb) reverb.connect(toneRecorder) else // reverb.disconnect(toneRecorder);
    */
   async function toggleReverb() {
-
     if (!reverb || reverb['_wasDisposed'] === true) {
+      console.log('start reverb')
+
       await Tone.start();
       await Tone.context.resume()
-      // move to listener so to only create one - can then be connected / disconnected here
       powerStatus.micOn = true
       reverb = new Tone.Reverb({
         wet: 1,
         decay: .9,
         preDelay: .4,
       }).toDestination();
-      // open mic
-      // toneMic.connect(reverb);
-      console.log('start reverb')
     }
-
 
     if (powerStatus.reverbOn) {
       powerStatus.reverbOn = false;
-      // toneMic.connect(reverb);
-      
-      // toneMic.disconnect(reverb);
-      // reverb.disconnect()
-      // reverb.disose()
-      // reverb.disconnect(toneRecorder);
       console.log("reverb node", reverb);
       console.log("reverb status on should be false", powerStatus.reverbOn);
-      
-     
-
     } else {
       powerStatus.reverbOn = true;
-      // toneMic.disconnect(reverb)
-
-      // toneMic.connect(reverb);
-      // reverb.connect(toneRecorder);
       console.log("reverb node", reverb);
       console.log("reverb status on should be true", powerStatus.reverbOn);
     
@@ -430,7 +386,7 @@
       <div class="app-ctrls--main">
         <!-- svelte-ignore a11y-missing-attribute -->
         <button on:click={toggleReverb}>
-          <img src={reverbSrc} title="Turn Reverb On/Off" />
+          <img src={reverbImgSrc} title="Turn Reverb On/Off" />
           <h6 class="modal-ctrls--effects">Reverb</h6>
         </button>
 
@@ -550,4 +506,8 @@
     --font-family-sans: sans-serif;
     --font-family-mono: monaco, "Consolas", "Lucida Console", monospace;
   }
+
+  /* theme colors
+  467eaf  #1a9ce2  #35bdec  #50e5fe  #199be2 */
+
 </style>
