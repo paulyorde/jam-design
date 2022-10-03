@@ -81,15 +81,17 @@
 
   
    $: if(powerStatus.reverbOn) {
-    // console.log('power listener on', powerStatus.micOn)
+    console.log('reverb listener start')
+    
     if(toneMic) {
       toneMic.connect(reverb);
-    console.log('reverb listener on should be true', powerStatus.reverbOn)
+      console.log('reverb listener: on should be true', powerStatus.reverbOn)
     }
-    
+
    } else {
     if(toneMic) {
       toneMic.disconnect(reverb)
+      reverb.dispose()
       console.log('reverb listener on should be false', powerStatus.reverbOn)
     }
     // console.log('power listener off', powerStatus.micOn)
@@ -267,7 +269,7 @@
    */
   async function toggleReverb() {
 
-    if (!reverb) {
+    if (!reverb || reverb['_wasDisposed'] === true) {
       await Tone.start();
       await Tone.context.resume()
       // move to listener so to only create one - can then be connected / disconnected here
@@ -281,16 +283,19 @@
       // toneMic.connect(reverb);
       console.log('start reverb')
     }
+
+
     if (powerStatus.reverbOn) {
       powerStatus.reverbOn = false;
       // toneMic.connect(reverb);
       
-      toneMic.disconnect(reverb);
+      // toneMic.disconnect(reverb);
       // reverb.disconnect()
       // reverb.disose()
       // reverb.disconnect(toneRecorder);
-      console.log("reverb status off", reverb);
-     
+      console.log("reverb node", reverb);
+      console.log("reverb status on should be false", powerStatus.reverbOn);
+      
      
 
     } else {
@@ -299,7 +304,8 @@
 
       // toneMic.connect(reverb);
       // reverb.connect(toneRecorder);
-      console.log("reverb status on", reverb);
+      console.log("reverb node", reverb);
+      console.log("reverb status on should be true", powerStatus.reverbOn);
     
     }
   }
