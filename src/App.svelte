@@ -31,6 +31,7 @@
   let active = true
 
   let modal_open = false;
+
   let recordStatus = {
     isRecording: false,
     record: "https://icongr.am/jam/mic-f.svg?size=45&color=f5f0f0",
@@ -40,6 +41,7 @@
     // stop: "https://icongr.am/jam/stop.svg?size=45&color=f5f0f0"
   };
   let recoredSrc = recordStatus.record;
+
   let playStatus = {
     isPlaying: false,
     play: "https://icongr.am/clarity/play.svg?size=45&color=f5f0f0",
@@ -55,9 +57,16 @@
 
     reverbImgSrcOff: "https://icongr.am/jam/power.svg?size=30&color=black",
     reverbImgSrcOn: "https://icongr.am/jam/power.svg?size=30&color=f5f0f0",
+  
+
+  
   };
   let playSrc = playStatus.play;
   let reverbImgSrc = powerStatus.reverbImgSrcOn;
+  
+  let delayImgSrc = "https://icongr.am/jam/power.svg?size=30&color=f5f0f0"
+  let chorusImgSrc = "https://icongr.am/jam/power.svg?size=30&color=f5f0f0"
+  let distortionImgSrc = "https://icongr.am/jam/power.svg?size=30&color=f5f0f0"
   
    $: if(powerStatus.reverbOn) {
     console.log('reverb listener start')
@@ -368,7 +377,7 @@
   <!-- Reverb Delay-->
     <!-- SlOT -->
     <!-- <Effects> -->
-      <div class:active>
+      <div class:active style="margin-top: 10px;">
         <Container>
           <Row style="margin-bottom:10px">
             <!-- <Col size="6"></Col> -->
@@ -382,7 +391,7 @@
   
               <button on:click={toggleDelay}>
                 <!-- svelte-ignore a11y-missing-attribute -->
-                <img src="https://icongr.am/jam/power.svg?size=30&color=f5f0f0" />
+                <img src={delayImgSrc} />
                 <h6 class="modal-ctrls--effects">Delay</h6>
               </button>
             </div>
@@ -397,17 +406,17 @@
             <div class="app-ctrls--main foo">
               <button on:click={toggleChours}>
                 <!-- svelte-ignore a11y-missing-attribute -->
-                <img src="https://icongr.am/jam/power.svg?size=30&color=f5f0f0" />
+                <img src={chorusImgSrc} />
                 <h6 class="modal-ctrls--effects">Chorus</h6>
               </button>
   
               <button on:click={toggleDistortion}>
                 <!-- svelte-ignore a11y-missing-attribute -->
-                <img src="https://icongr.am/jam/power.svg?size=30&color=f5f0f0" />
+                <img src={distortionImgSrc} />
                 <h6 class="modal-ctrls--effects">Distortion</h6>
               </button>
             </div>
-            <Col size="4" />
+            <!-- <Col size="4" /> -->
           </Row>
         </Container>
       </div>
