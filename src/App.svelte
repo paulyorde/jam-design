@@ -29,6 +29,8 @@
   let atcStream;
   let reverb = null;
   let active = true
+  let activeCtrls = true
+  let activeRadio = false
 
   let modal_open = false;
 
@@ -105,6 +107,9 @@
     
 
   async function getMediaDevice() {
+    activeCtrls = !activeCtrls
+    activeRadio = !activeRadio
+
     await Tone.start();
    
 
@@ -326,54 +331,68 @@
           <img src="public\icons8-radio-tower-48.png" />
         </div>
       </Col>
-      <Col>
+      <!-- <Col>
         <Container>
           <button on:click={getMediaDevice} class="modal-ctrls--effects">start</button>
         </Container>
-      </Col>
+      </Col> -->
     </Row>
   </Container>
 
   <!-- Main Controls -->
+  <!-- <Container>
+    <button on:click={getMediaDevice} class="modal-ctrls--effects">start</button>
+  </Container> -->
   <Container>
+    <Row>
+      <Col size="5"></Col>
+      <button on:click={getMediaDevice} class:activeRadio>
+        <!-- svelte-ignore a11y-missing-attribute -->
+        <img src="public\icons8-radio-tower-48.png" />
+      </button>
+    </Row>
     <!-- Mic Play -->
     <Row style="margin-bottom:10px">
       <Col size="5"></Col>
-      <div class="app-ctrls--main">
-        <!-- Mic -->
-        <!-- svelte-ignore a11y-missing-attribute -->
-        <button on:click={toggleRecordStatus}>
-          <img src={recoredSrc} />
-        </button>
-
-        <!-- Play -->
-        <!-- svelte-ignore a11y-missing-attribute -->
-        <button on:click={togglePlayStatus}>
-          <img src={playSrc} />
-        </button>
+      <div class:activeCtrls>
+        <div class="app-ctrls--main">
+          <!-- Mic -->
+          <!-- svelte-ignore a11y-missing-attribute -->
+          <button on:click={toggleRecordStatus}>
+            <img src={recoredSrc} />
+          </button>
+  
+          <!-- Play -->
+          <!-- svelte-ignore a11y-missing-attribute -->
+          <button on:click={togglePlayStatus}>
+            <img src={playSrc} />
+          </button>
+        </div>
       </div>
     </Row>
 
     <Row>
       <Col size="5"></Col>
-      <div class="app-ctrls--main">
-        <!-- Effects
-          this could be mixer to enhance over all quality of recording and playback.
-        -->
-        <!-- svelte-ignore a11y-missing-attribute -->
-        <button on:click={(_) => (active = !active)}>
-          <img
-            src="https://icongr.am/entypo/sound-mix.svg?size=45&color=f5f0f0"
-          />
-        </button>
-
-        <!-- Save -->
-        <!-- svelte-ignore a11y-missing-attribute -->
-        <button on:click={download}>
-          <img
-            src="https://icongr.am/feather/download-cloud.svg?size=45&color=f5f0f0"
-          />
-        </button>
+      <div class:activeCtrls>
+        <div class="app-ctrls--main">
+          <!-- Effects
+            this could be mixer to enhance over all quality of recording and playback.
+          -->
+          <!-- svelte-ignore a11y-missing-attribute -->
+          <button on:click={(_) => (active = !active)}>
+            <img
+              src="https://icongr.am/entypo/sound-mix.svg?size=45&color=f5f0f0"
+            />
+          </button>
+  
+          <!-- Save -->
+          <!-- svelte-ignore a11y-missing-attribute -->
+          <button on:click={download}>
+            <img
+              src="https://icongr.am/feather/download-cloud.svg?size=45&color=f5f0f0"
+            />
+          </button>
+        </div>
       </div>
       <!-- <Col size="4"></Col> -->
     </Row>
@@ -436,6 +455,10 @@
   .active {
     display: none;
   }
+
+  .activeRadio {
+    display: none;
+  }
   .button,
   input[type="button"],
   input[type="reset"],
@@ -463,6 +486,10 @@
 
   .app-ctrls--main {
     padding-right: 10px;
+  }
+
+  .activeCtrls {
+    display: none;
   }
 
 
