@@ -68,7 +68,7 @@
    } else {
     reverbImgSrc = powerStatus.reverbImgSrcOn
 
-    if(toneMic) {
+    if(toneMic && reverb) {
       toneMic.disconnect(reverb)
       reverb.dispose()
       reverb = null
@@ -76,21 +76,21 @@
     }
    }
 
-   $: if(powerStatus.micOn) {
-    if(!toneMic) {
-      toneMic = new Tone.UserMedia().toDestination();
-      toneContext = Tone.context;
-      // toneRecorder = new Tone.Recorder();
+  //  $: if(powerStatus.micOn) {
+  //   if(!toneMic) {
+  //     toneMic = new Tone.UserMedia().toDestination();
+  //     toneContext = Tone.context;
+  //     // toneRecorder = new Tone.Recorder();
 
-      toneMic.open().then((stream) => {
-        console.log("mic listener on should be true", toneMic);
-        atcStream = stream;
-        });
-      }
+  //     toneMic.open().then((stream) => {
+  //       console.log("mic listener on should be true", toneMic);
+  //       atcStream = stream;
+  //       });
+  //     }
      
-   } else {
-    console.log('mic listener on should be false', powerStatus.micOn)
-   }
+  //  } else {
+  //   console.log('mic listener on should be false', powerStatus.micOn)
+  //  }
     
 
   async function getMediaDevice() {
@@ -115,25 +115,19 @@
      * stream state = started
      * toneContext/audioContext = running
      */
-    startRecord();
+    // startRecord();
   }
 
   // pass in userMedia object
   async function startRecord() {
     console.log("start record stream", atcStream);
-    // if !mic - put in get media
-    // toneMic.open().then((stream) => {
-    //   console.log('mic',stream)
-    //   atcStream = stream
-    //   // toneMic.mute = false
-    // });
-    // is a new recorder for every mic open neccesary
-    // instead just disconnect from recorder created on create user media which happens once
-    // toneRecorder = new Tone.Recorder();
-    // try moving to after stream opens
-    toneMic.connect(toneRecorder);
+ 
     await Tone.context.resume();
-
+    
+    toneMic.connect(toneRecorder);
+    if(reverb) {
+      reverb.connect(toneRecorder)
+    }
     await toneRecorder.start();
 
     // toneStreamNode = toneContext.createMediaStreamDestination();
@@ -146,20 +140,12 @@
     console.log("stop record stream ", atcStream);
     console.log("stop record tonecontext::", toneContext);
     /**
-     * Cleanup
+     * Cleanup - saving system resources
      */
     await toneMic.disconnect(toneRecorder);
     Tone.context.dispose();
     toneContext.rawContext.suspend();
     toneMic.close();
-    // toneRecorder.disconnect()
-    /**
-     * dispose the Stream to get it to stop or mute mic
-     * how to mute mic = mic.mute = true or setMic(true) or destination.mute (speakers)
-     * how to get context state to stopped / suspended = audioCtx.suspend (web api)
-     */
-    // toneRecorder.dispose()
-    // toneContext
   }
 
   async function play() {
@@ -213,7 +199,7 @@
     recordStatus.isRecording = !recordStatus.isRecording;
     if (recordStatus.isRecording) {
       recoredSrc = recordStatus.stop;
-      getMediaDevice();
+      startRecord();
       toneMic.mute = false;
     } else {
       recoredSrc = recordStatus.record;
@@ -246,7 +232,7 @@
 
       await Tone.start();
       await Tone.context.resume()
-      powerStatus.micOn = true
+      // powerStatus.micOn = true
       reverb = new Tone.Reverb({
         wet: 1,
         decay: .9,
@@ -419,6 +405,10 @@
       </div>
       <Col size="4" />
     </Row>
+  </Container>
+
+  <Container>
+    <button on:click={getMediaDevice}>start</button>
   </Container>
 
   <!-- footer links contact etc. -->
