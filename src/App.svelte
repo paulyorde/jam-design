@@ -326,6 +326,11 @@
           <img src="public\icons8-radio-tower-48.png" />
         </div>
       </Col>
+      <Col>
+        <Container>
+          <button on:click={getMediaDevice} class="modal-ctrls--effects">start</button>
+        </Container>
+      </Col>
     </Row>
   </Container>
 
@@ -333,7 +338,7 @@
   <Container>
     <!-- Mic Play -->
     <Row style="margin-bottom:10px">
-      <Col size="5" />
+      <Col size="5"></Col>
       <div class="app-ctrls--main">
         <!-- Mic -->
         <!-- svelte-ignore a11y-missing-attribute -->
@@ -350,7 +355,7 @@
     </Row>
 
     <Row>
-      <Col size="5" />
+      <Col size="5"></Col>
       <div class="app-ctrls--main">
         <!-- Effects
           this could be mixer to enhance over all quality of recording and playback.
@@ -379,9 +384,9 @@
     <!-- <Effects> -->
       <div class:active style="margin-top: 10px;">
         <Container>
-          <Row style="margin-bottom:10px">
+          <Row style="margin-bottom: 10px;">
             <!-- <Col size="6"></Col> -->
-            <Col size="5" />
+            <Col size="5"></Col>
             <div class="app-ctrls--main">
               <!-- svelte-ignore a11y-missing-attribute -->
               <button on:click={toggleReverb}>
@@ -400,10 +405,10 @@
   
           <!-- Chorus Distortion -->
           <!-- <Container style="max-width: 300px;"> -->
-          <Row style="margin-bottom:10px">
+          <Row>
             <!-- <Col size="6"></Col> -->
-            <Col size="5" />
-            <div class="app-ctrls--main foo">
+            <Col size="5"></Col>
+            <div class="app-ctrls--main">
               <button on:click={toggleChours}>
                 <!-- svelte-ignore a11y-missing-attribute -->
                 <img src={chorusImgSrc} />
@@ -413,7 +418,7 @@
               <button on:click={toggleDistortion}>
                 <!-- svelte-ignore a11y-missing-attribute -->
                 <img src={distortionImgSrc} />
-                <h6 class="modal-ctrls--effects">Distortion</h6>
+                <h6 class="modal-ctrls--effects">Dirt</h6>
               </button>
             </div>
             <!-- <Col size="4" /> -->
@@ -422,9 +427,7 @@
       </div>
     <!-- </Effects> -->
 
-  <Container>
-    <button on:click={getMediaDevice}>start</button>
-  </Container>
+  
 
   <!-- footer links contact etc. -->
 </main>
@@ -440,6 +443,8 @@
   button {
     background-color: #5a86c1 !important;
     border: none;
+    min-width: 95px;
+    max-width: 95px;
   }
 
   .modal.s-wBJb4QHrfejj {
@@ -460,10 +465,7 @@
     padding-right: 10px;
   }
 
-  .foo {
-    margin: 10px;
-    background: none !important;
-  }
+
 
   .modal-ctrls--effects {
     color: #f5f0f0;
