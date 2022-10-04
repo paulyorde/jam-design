@@ -12,6 +12,7 @@
   import * as Tone from "tone";
   import { saveAs } from "file-saver";
   import * as encoder from "audio-encoder";
+    import Effects from "./lib/Effects.svelte";
 
   // these object porperties below could be here in main file passed into each component
   // or used as a store?
@@ -27,6 +28,7 @@
   let player;
   let atcStream;
   let reverb = null;
+  let active = true
 
   let modal_open = false;
   let recordStatus = {
@@ -345,7 +347,7 @@
           this could be mixer to enhance over all quality of recording and playback.
         -->
         <!-- svelte-ignore a11y-missing-attribute -->
-        <button on:click={(event) => (modal_open = true)}>
+        <button on:click={(_) => (active = !active)}>
           <img
             src="https://icongr.am/entypo/sound-mix.svg?size=45&color=f5f0f0"
           />
@@ -364,48 +366,52 @@
   </Container>
 
   <!-- Reverb Delay-->
-  <!-- <Card style="display:flex; justify-content: space-between;"> -->
-  <Container>
-    <Row style="margin-bottom:10px">
-      <!-- <Col size="6"></Col> -->
-      <Col size="5" />
-      <div class="app-ctrls--main">
-        <!-- svelte-ignore a11y-missing-attribute -->
-        <button on:click={toggleReverb}>
-          <img src={reverbImgSrc} title="Turn Reverb On/Off" />
-          <h6 class="modal-ctrls--effects">Reverb</h6>
-        </button>
-
-        <button on:click={toggleDelay}>
-          <!-- svelte-ignore a11y-missing-attribute -->
-          <img src="https://icongr.am/jam/power.svg?size=30&color=f5f0f0" />
-          <h6 class="modal-ctrls--effects">Delay</h6>
-        </button>
+    <!-- SlOT -->
+    <!-- <Effects> -->
+      <div class:active>
+        <Container>
+          <Row style="margin-bottom:10px">
+            <!-- <Col size="6"></Col> -->
+            <Col size="5" />
+            <div class="app-ctrls--main">
+              <!-- svelte-ignore a11y-missing-attribute -->
+              <button on:click={toggleReverb}>
+                <img src={reverbImgSrc} title="Turn Reverb On/Off" />
+                <h6 class="modal-ctrls--effects">Reverb</h6>
+              </button>
+  
+              <button on:click={toggleDelay}>
+                <!-- svelte-ignore a11y-missing-attribute -->
+                <img src="https://icongr.am/jam/power.svg?size=30&color=f5f0f0" />
+                <h6 class="modal-ctrls--effects">Delay</h6>
+              </button>
+            </div>
+          </Row>
+          <!-- </Container> -->
+  
+          <!-- Chorus Distortion -->
+          <!-- <Container style="max-width: 300px;"> -->
+          <Row style="margin-bottom:10px">
+            <!-- <Col size="6"></Col> -->
+            <Col size="5" />
+            <div class="app-ctrls--main foo">
+              <button on:click={toggleChours}>
+                <!-- svelte-ignore a11y-missing-attribute -->
+                <img src="https://icongr.am/jam/power.svg?size=30&color=f5f0f0" />
+                <h6 class="modal-ctrls--effects">Chorus</h6>
+              </button>
+  
+              <button on:click={toggleDistortion}>
+                <!-- svelte-ignore a11y-missing-attribute -->
+                <img src="https://icongr.am/jam/power.svg?size=30&color=f5f0f0" />
+                <h6 class="modal-ctrls--effects">Distortion</h6>
+              </button>
+            </div>
+            <Col size="4" />
+          </Row>
+        </Container>
       </div>
-    </Row>
-    <!-- </Container> -->
-
-    <!-- Chorus Distortion -->
-    <!-- <Container style="max-width: 300px;"> -->
-    <Row style="margin-bottom:10px">
-      <!-- <Col size="6"></Col> -->
-      <Col size="5" />
-      <div class="app-ctrls--main foo">
-        <button on:click={toggleChours}>
-          <!-- svelte-ignore a11y-missing-attribute -->
-          <img src="https://icongr.am/jam/power.svg?size=30&color=f5f0f0" />
-          <h6 class="modal-ctrls--effects">Chorus</h6>
-        </button>
-
-        <button on:click={toggleDistortion}>
-          <!-- svelte-ignore a11y-missing-attribute -->
-          <img src="https://icongr.am/jam/power.svg?size=30&color=f5f0f0" />
-          <h6 class="modal-ctrls--effects">Distortion</h6>
-        </button>
-      </div>
-      <Col size="4" />
-    </Row>
-  </Container>
+    <!-- </Effects> -->
 
   <Container>
     <button on:click={getMediaDevice}>start</button>
@@ -415,6 +421,9 @@
 </main>
 
 <style>
+  .active {
+    display: none;
+  }
   .button,
   input[type="button"],
   input[type="reset"],
