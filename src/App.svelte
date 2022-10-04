@@ -1,4 +1,5 @@
 <script>
+  import { fade } from 'svelte/transition';
   import "chota";
   import {
     Modal,
@@ -340,21 +341,27 @@
   </Container>
 
   <!-- Main Controls -->
-  <!-- <Container>
-    <button on:click={getMediaDevice} class="modal-ctrls--effects">start</button>
-  </Container> -->
   <Container>
-    <Row>
+    <Row style="margin-bottom: 20px">
       <Col size="5"></Col>
-      <button on:click={getMediaDevice} class:activeRadio>
+      {#if !activeRadio}
+      <button on:click={getMediaDevice} class:activeRadio transition:fade>
         <!-- svelte-ignore a11y-missing-attribute -->
         <img src="public\icons8-radio-tower-48.png" />
       </button>
+      {/if}
     </Row>
+  
+  </Container>
+
+ 
+  <Container>
+    
     <!-- Mic Play -->
+  {#if !activeCtrls}
     <Row style="margin-bottom:10px">
       <Col size="5"></Col>
-      <div class:activeCtrls>
+      <div class:activeCtrls transition:fade>
         <div class="app-ctrls--main">
           <!-- Mic -->
           <!-- svelte-ignore a11y-missing-attribute -->
@@ -369,6 +376,7 @@
           </button>
         </div>
       </div>
+     
     </Row>
 
     <Row>
@@ -396,12 +404,15 @@
       </div>
       <!-- <Col size="4"></Col> -->
     </Row>
+  {/if}
+
   </Container>
 
   <!-- Reverb Delay-->
     <!-- SlOT -->
     <!-- <Effects> -->
-      <div class:active style="margin-top: 10px;">
+      {#if !active}
+      <div class:active style="margin-top: 10px;" transition:fade>
         <Container>
           <Row style="margin-bottom: 10px;">
             <!-- <Col size="6"></Col> -->
@@ -444,6 +455,7 @@
           </Row>
         </Container>
       </div>
+      {/if}
     <!-- </Effects> -->
 
   
