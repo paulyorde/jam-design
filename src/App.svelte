@@ -2,29 +2,17 @@
   import { fade } from 'svelte/transition';
   import "chota";
   import {
-    Modal,
-    Button,
-    Card,
     Row,
     Col,
-    Container,
-    Input,
+    Container
   } from "svelte-chota";
   import * as Tone from "tone";
   import { saveAs } from "file-saver";
   import * as encoder from "audio-encoder";
-    import Effects from "./lib/Effects.svelte";
-
-  // these object porperties below could be here in main file passed into each component
-  // or used as a store?
-  // usermedia , context happens in main file
-  // recorder in recorder, player in player, etc...
 
   let toneRecorder;
   let toneMic;
   let toneContext;
-  // let toneStreamNode
-  // let toneStreamSourceNode
   let toneRecordBlob;
   let player;
   let atcStream;
@@ -32,19 +20,12 @@
   let active = true
   let activeCtrls = true
   let activeRadio = false
-
-  let modal_open = false;
-
   let recordStatus = {
     isRecording: false,
     record: "https://icongr.am/jam/mic-f.svg?size=45&color=f5f0f0",
-    // record: "https://icongr.am/jam/mic-f.svg?size=45&color=f5f0f0",
     stop: "https://icongr.am/jam/stop.svg?size=45&color=f5f0f0",
-    // src:
-    // stop: "https://icongr.am/jam/stop.svg?size=45&color=f5f0f0"
   };
   let recoredSrc = recordStatus.record;
-
   let playStatus = {
     isPlaying: false,
     play: "https://icongr.am/clarity/play.svg?size=45&color=f5f0f0",
@@ -52,21 +33,16 @@
   };
   let powerStatus = {
     micOn: false,
-
     reverbOn: false,
     delayOn: false,
     chorusOn: false,
     distortionOn: false,
-
     reverbImgSrcOff: "https://icongr.am/jam/power.svg?size=30&color=black",
     reverbImgSrcOn: "https://icongr.am/jam/power.svg?size=30&color=f5f0f0",
-  
-
   
   };
   let playSrc = playStatus.play;
   let reverbImgSrc = powerStatus.reverbImgSrcOn;
-  
   let delayImgSrc = "https://icongr.am/jam/power.svg?size=30&color=f5f0f0"
   let chorusImgSrc = "https://icongr.am/jam/power.svg?size=30&color=f5f0f0"
   let distortionImgSrc = "https://icongr.am/jam/power.svg?size=30&color=f5f0f0"
@@ -90,33 +66,13 @@
     }
    }
 
-  //  $: if(powerStatus.micOn) {
-  //   if(!toneMic) {
-  //     toneMic = new Tone.UserMedia().toDestination();
-  //     toneContext = Tone.context;
-  //     // toneRecorder = new Tone.Recorder();
-
-  //     toneMic.open().then((stream) => {
-  //       console.log("mic listener on should be true", toneMic);
-  //       atcStream = stream;
-  //       });
-  //     }
-     
-  //  } else {
-  //   console.log('mic listener on should be false', powerStatus.micOn)
-  //  }
-    
-
   async function getMediaDevice() {
     activeCtrls = !activeCtrls
     activeRadio = !activeRadio
 
     await Tone.start();
-   
 
     if (!toneMic) {
-      // pass in { toneMic: userMedia, toneContext: audioContext }
-      // -> returns copy with updated userMedia to calling method.
       toneMic = new Tone.UserMedia().toDestination();
       toneContext = Tone.context;
       toneRecorder = new Tone.Recorder();
@@ -126,32 +82,22 @@
         atcStream = stream;
       });
     }
-    console.log("arter toneMic", toneMic);
-
-    /**
-     * stream state = started
-     * toneContext/audioContext = running
-     */
-    // startRecord();
   }
 
-  // pass in userMedia object
   async function startRecord() {
     console.log("start record stream", atcStream);
  
     await Tone.context.resume();
     
     toneMic.connect(toneRecorder);
+
     if(reverb) {
       reverb.connect(toneRecorder)
     }
-    await toneRecorder.start();
 
-    // toneStreamNode = toneContext.createMediaStreamDestination();
-    // toneStreamSourceNode = toneContext.createMediaStreamSource(toneStreamNode.stream);
+    await toneRecorder.start();
   }
 
-  // pass in recorder, mic, context.
   async function stopRecord() {
     toneRecordBlob = await toneRecorder.stop();
     console.log("stop record stream ", atcStream);
@@ -296,35 +242,16 @@
   }
 </script>
 
-<!-- TODO 
-  Pads could possilbe be different bg colors 
-  like andy warhal 
-  or pad machines that have different color bgs for each pad
-
-  pad section to play song sections
--->
 
 <main>
- 
-
-  <!--Row header logo settings etc -->
+  <!-- Top Bar -->
   <Container>
-    <!-- background: rgb(102 133 161);
-          color: rgb(172 192 211);
-          <a target="_blank" href="https://icons8.com/icon/b0M9m0XIfOcD/radio-tower">Radio Tower</a> icon by <a target="_blank" href="https://icons8.com">Icons8</a>
-   
-      fav
-      <a target="_blank" href="https://icons8.com/icon/b0M9m0XIfOcD/radio-tower">Radio Tower</a> icon by <a target="_blank" href="https://icons8.com">Icons8</a>
-        -->
-
-    <!-- Header -->
-    <Row
-      style="color: #5b87c2; font-size: x-large; height:200px; font-family: fantasy;margin-top:10px;"
-    >
+    <Row style="color: #5b87c2; font-size: x-large; height:200px; font-family: fantasy;margin-top:10px;">
       <Col size="6">
+        <!-- Logo -->
         <div
           style="display: flex;
-        align-items: center;"
+          align-items: center;"
         >
           <h6>Song Pad</h6>
           <!-- svelte-ignore a11y-missing-attribute -->
@@ -332,38 +259,29 @@
           <img src="public\icons8-radio-tower-48.png" />
         </div>
       </Col>
-      <!-- <Col>
-        <Container>
-          <button on:click={getMediaDevice} class="modal-ctrls--effects">start</button>
-        </Container>
-      </Col> -->
+      <!-- Start Mic -->
+      {#if !activeRadio}
+      <Container>
+        <Row style="margin-bottom: 20px">
+          <Col size="5"></Col>
+          <button on:click={getMediaDevice} class:activeRadio transition:fade>
+            <!-- svelte-ignore a11y-missing-attribute -->
+            <img src="public\icons8-radio-tower-48.png" />
+          </button>
+        </Row>
+      </Container>
+      {/if}
     </Row>
   </Container>
 
   <!-- Main Controls -->
-  <Container>
-    <Row style="margin-bottom: 20px">
-      <Col size="5"></Col>
-      {#if !activeRadio}
-      <button on:click={getMediaDevice} class:activeRadio transition:fade>
-        <!-- svelte-ignore a11y-missing-attribute -->
-        <img src="public\icons8-radio-tower-48.png" />
-      </button>
-      {/if}
-    </Row>
-  
-  </Container>
-
- 
-  <Container>
-    
-    <!-- Mic Play -->
   {#if !activeCtrls}
+  <Container>
     <Row style="margin-bottom:10px">
       <Col size="5"></Col>
       <div class:activeCtrls transition:fade>
         <div class="app-ctrls--main">
-          <!-- Mic -->
+          <!-- Record -->
           <!-- svelte-ignore a11y-missing-attribute -->
           <button on:click={toggleRecordStatus}>
             <img src={recoredSrc} />
@@ -376,23 +294,19 @@
           </button>
         </div>
       </div>
-     
     </Row>
 
     <Row>
       <Col size="5"></Col>
       <div class:activeCtrls>
         <div class="app-ctrls--main">
-          <!-- Effects
-            this could be mixer to enhance over all quality of recording and playback.
-          -->
+          <!-- Open Effects -->
           <!-- svelte-ignore a11y-missing-attribute -->
           <button on:click={(_) => (active = !active)}>
             <img
               src="https://icongr.am/entypo/sound-mix.svg?size=45&color=f5f0f0"
             />
           </button>
-  
           <!-- Save -->
           <!-- svelte-ignore a11y-missing-attribute -->
           <button on:click={download}>
@@ -402,66 +316,55 @@
           </button>
         </div>
       </div>
-      <!-- <Col size="4"></Col> -->
     </Row>
+  </Container>
   {/if}
 
+  <!-- Effects -->
+  {#if !active}
+  <Container>
+    <div class:active style="margin-top: 10px;" transition:fade>
+      <Row style="margin-bottom: 10px;">
+        <Col size="5"></Col>
+        <!-- Reverb Delay-->
+        <div class="app-ctrls--main">
+          <!-- svelte-ignore a11y-missing-attribute -->
+          <button on:click={toggleReverb}>
+            <img src={reverbImgSrc} title="Turn Reverb On/Off" />
+            <h6 class="modal-ctrls--effects">Reverb</h6>
+          </button>
+
+          <button on:click={toggleDelay}>
+            <!-- svelte-ignore a11y-missing-attribute -->
+            <img src={delayImgSrc} />
+            <h6 class="modal-ctrls--effects">Delay</h6>
+          </button>
+        </div>
+      </Row>
+
+      <Row>
+        <Col size="5"></Col>
+        <!-- Chorus Distortion -->
+        <div class="app-ctrls--main">
+          <button on:click={toggleChours}>
+            <!-- svelte-ignore a11y-missing-attribute -->
+            <img src={chorusImgSrc} />
+            <h6 class="modal-ctrls--effects">Chorus</h6>
+          </button>
+
+          <button on:click={toggleDistortion}>
+            <!-- svelte-ignore a11y-missing-attribute -->
+            <img src={distortionImgSrc} />
+            <h6 class="modal-ctrls--effects">Dirt</h6>
+          </button>
+        </div>
+      </Row>
+    </div>
   </Container>
+  {/if}
 
-  <!-- Reverb Delay-->
-    <!-- SlOT -->
-    <!-- <Effects> -->
-      {#if !active}
-      <div class:active style="margin-top: 10px;" transition:fade>
-        <Container>
-          <Row style="margin-bottom: 10px;">
-            <!-- <Col size="6"></Col> -->
-            <Col size="5"></Col>
-            <div class="app-ctrls--main">
-              <!-- svelte-ignore a11y-missing-attribute -->
-              <button on:click={toggleReverb}>
-                <img src={reverbImgSrc} title="Turn Reverb On/Off" />
-                <h6 class="modal-ctrls--effects">Reverb</h6>
-              </button>
-  
-              <button on:click={toggleDelay}>
-                <!-- svelte-ignore a11y-missing-attribute -->
-                <img src={delayImgSrc} />
-                <h6 class="modal-ctrls--effects">Delay</h6>
-              </button>
-            </div>
-          </Row>
-          <!-- </Container> -->
-  
-          <!-- Chorus Distortion -->
-          <!-- <Container style="max-width: 300px;"> -->
-          <Row>
-            <!-- <Col size="6"></Col> -->
-            <Col size="5"></Col>
-            <div class="app-ctrls--main">
-              <button on:click={toggleChours}>
-                <!-- svelte-ignore a11y-missing-attribute -->
-                <img src={chorusImgSrc} />
-                <h6 class="modal-ctrls--effects">Chorus</h6>
-              </button>
-  
-              <button on:click={toggleDistortion}>
-                <!-- svelte-ignore a11y-missing-attribute -->
-                <img src={distortionImgSrc} />
-                <h6 class="modal-ctrls--effects">Dirt</h6>
-              </button>
-            </div>
-            <!-- <Col size="4" /> -->
-          </Row>
-        </Container>
-      </div>
-      {/if}
-    <!-- </Effects> -->
-
-  
-
-  <!-- footer links contact etc. -->
 </main>
+
 
 <style>
   .active {
@@ -481,21 +384,6 @@
     min-width: 95px;
     max-width: 95px;
   }
-
-  .modal.s-wBJb4QHrfejj {
-    padding-top: 10px !important;
-    min-width: 300px !important;
-    display: flex !important;
-    align-items: center !important;
-    background: #12395bed !important;
-    top: 36% !important;
-    left: 54% !important;
-  }
-
-  /* .background.s-wBJb4QHrfejj {
-    background-color: none !important;
-  } */
-
   .app-ctrls--main {
     padding-right: 10px;
   }
@@ -503,18 +391,9 @@
   .activeCtrls {
     display: none;
   }
-
-
-
   .modal-ctrls--effects {
     color: #f5f0f0;
   }
-
-  /* .powerStatusBtn {
-    background: none !important;
-    border: none !important;
-    padding: unset !important;
-  } */
 
   /* input[type='range'] {
       overflow: hidden;

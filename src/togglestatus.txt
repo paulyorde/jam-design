@@ -1,4 +1,19 @@
- 
+   //  $: if(powerStatus.micOn) {
+  //   if(!toneMic) {
+  //     toneMic = new Tone.UserMedia().toDestination();
+  //     toneContext = Tone.context;
+  //     // toneRecorder = new Tone.Recorder();
+
+  //     toneMic.open().then((stream) => {
+  //       console.log("mic listener on should be true", toneMic);
+  //       atcStream = stream;
+  //       });
+  //     }
+     
+  //  } else {
+  //   console.log('mic listener on should be false', powerStatus.micOn)
+  //  }
+    
 
   function togglePowerStatus(ctrl) {
     switch (ctrl) {

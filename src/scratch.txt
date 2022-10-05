@@ -1,3 +1,7 @@
+
+    // toneStreamNode = toneContext.createMediaStreamDestination();
+    // toneStreamSourceNode = toneContext.createMediaStreamSource(toneStreamNode.stream);   
+   
    <Col size="1"> 
         <!-- Mic -->
         <!-- svelte-ignore a11y-missing-attribute -->
@@ -44,6 +48,25 @@
           <img src="https://icongr.am/feather/download-cloud.svg?size=45&color=f5f0f0" />
         </Button>
       </Col>
+
+
+       <!-- background: rgb(102 133 161);
+          color: rgb(172 192 211);
+          <a target="_blank" href="https://icons8.com/icon/b0M9m0XIfOcD/radio-tower">Radio Tower</a> icon by <a target="_blank" href="https://icons8.com">Icons8</a>
+   
+      fav
+      <a target="_blank" href="https://icons8.com/icon/b0M9m0XIfOcD/radio-tower">Radio Tower</a> icon by <a target="_blank" href="https://icons8.com">Icons8</a>
+        -->
+
+
+        <!-- TODO 
+  Pads could possilbe be different bg colors 
+  like andy warhal 
+  or pad machines that have different color bgs for each pad
+
+  pad section to play song sections
+-->
+
  
  
  
