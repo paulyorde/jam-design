@@ -10,13 +10,16 @@
   import { saveAs } from "file-saver";
   import * as encoder from "audio-encoder";
 
-  let toneRecorder;
+  let toneRecorder = null;
   let toneMic;
   let toneContext;
   let toneRecordBlob;
   let player;
   let atcStream;
   let reverb = null;
+  let delay = null;
+  let chorus = null;
+  let dirt = null;
   let active = true
   let activeCtrls = true
   let activeRadio = false
@@ -75,7 +78,7 @@
     if (!toneMic) {
       toneMic = new Tone.UserMedia().toDestination();
       toneContext = Tone.context;
-      toneRecorder = new Tone.Recorder();
+      
 
       toneMic.open().then((stream) => {
         console.log("mic", stream);
@@ -86,6 +89,10 @@
 
   async function startRecord() {
     console.log("start record stream", atcStream);
+
+    if(!toneRecorder) {
+      toneRecorder = new Tone.Recorder();
+    }
  
     await Tone.context.resume();
     
@@ -93,6 +100,15 @@
 
     if(reverb) {
       reverb.connect(toneRecorder)
+    }
+    if(delay) {
+      delay.connect(toneRecorder);
+    }
+    if(chorus) {
+      chorus.connect(toneRecorder);
+    }
+    if(dirt) {
+      dirt.connect(toneRecorder);
     }
 
     await toneRecorder.start();
@@ -192,10 +208,16 @@
   async function toggleReverb() {
     if (!reverb || reverb['_wasDisposed'] === true) {
       console.log('start reverb')
+      // this may have been started so need to check
+      // or setup listener to start on getMedia
+      // researd tone start/stop
+      // await Tone.start();
 
-      await Tone.start();
+      /**
+       * if context state = suspended/running
+       * also need to check for started/stopped
+      */
       await Tone.context.resume()
-      // powerStatus.micOn = true
       reverb = new Tone.Reverb({
         wet: 1,
         decay: .9,
@@ -216,18 +238,19 @@
   }
 
   function toggleDelay() {
+    // needs tone.start
     console.log("delay");
     const options = { debug: true, delayTime: "4n", feedBack: 0.4 };
-    const pingPong = new Tone.PingPongDelay(options).toDestination();
-    toneMic.connect(pingPong);
-    pingPong.connect(toneRecorder);
+    delay = new Tone.PingPongDelay(options).toDestination();
+    toneMic.connect(delay);
+    
   }
 
   function toggleChours() {
+    // needs tone.start
     console.log("chours");
-    const chorus = new Tone.Chorus(10, 0, 1).toDestination();
+    chorus = new Tone.Chorus(10, 0, 1).toDestination();
     toneMic.connect(chorus);
-    chorus.connect(toneRecorder);
   }
 
   /**
@@ -236,9 +259,8 @@
    */
   function toggleDistortion() {
     console.log('distortion')
-    const dist = new Tone.Distortion(1).toDestination();
-    toneMic.connect(dist);
-    dist.connect(toneRecorder);
+    dirt = new Tone.Distortion(1).toDestination();
+    toneMic.connect(dirt);
   }
 </script>
 
