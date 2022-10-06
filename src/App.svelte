@@ -138,12 +138,14 @@
     console.log("stop record stream ", atcStream);
     console.log("stop record tonecontext::", toneContext);
     /**
-     * Cleanup - saving system resources
+     * these cause not playing back 1st recording after starting record 2nd time
+     * currently will play 1st recording, after 2nd recording started and stopped
      */
-    await toneMic.disconnect(toneRecorder);
-    toneRecorder.dispose()
+    // await toneMic.disconnect(toneRecorder);
+    // toneRecorder.dispose()
     Tone.context.dispose();
     toneContext.rawContext.suspend();
+   
     /**
      * close cause effects to not be available
     */
@@ -170,7 +172,7 @@
   function stop() {
     player.stop();
     console.log("stop");
-    toneContext.rawContext.suspend();
+    // toneContext.rawContext.suspend();
   }
 
   /**

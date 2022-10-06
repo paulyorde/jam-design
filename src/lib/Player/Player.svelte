@@ -9,19 +9,26 @@
   let playSrc =  playStatus.play 
 
   async function play() {
-    await Tone.context.resume();
-    toneRecordBlob.arrayBuffer()
-  // decode is expensive - does tone make it faster - can this passed to worker
-    .then(arrayBuffer => toneContext.decodeAudioData(arrayBuffer))
-    .then(audioBuffer => {
-      player = new Tone.Player({url: audioBuffer}).toDestination()
-      player.start()
-    })
+    toneRecordBlob
+      .arrayBuffer()
+      // decode is expensive - does tone make it faster - can this passed to worker
+      .then((arrayBuffer) => toneContext.decodeAudioData(arrayBuffer))
+      .then(async (audioBuffer) => {
+        console.log("blob", audioBuffer);
+        await Tone.context.resume();
+
+        // not need to be new player each time.
+        if(!player) {
+          player = new Tone.Player({ url: audioBuffer }).toDestination();
+        }
+        player.start();
+      });
   }
 
   function stop() {
-    player.stop()
-    console.log('stop')
+    player.stop();
+    console.log("stop");
+    toneContext.rawContext.suspend();
   }
 
   function togglePlayStatus() {
