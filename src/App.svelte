@@ -13,7 +13,7 @@
   let toneRecorder = null;
   let toneMic;
   let toneContext;
-  let toneRecordBlob;
+  let toneRecordBlob = null;
   let player;
   let atcStream;
   let reverb = null;
@@ -53,6 +53,9 @@
    $: if(powerStatus.reverbOn) {
     console.log('reverb listener start')
     reverbImgSrc = powerStatus.reverbImgSrcOff;
+    /**
+     * if toneMic = currently toneMic is not being disposed - so this will be on and will connect reverb
+    */
     if(toneMic) {
       toneMic.connect(reverb);
       console.log('reverb listener: on should be true', powerStatus.reverbOn)
@@ -73,12 +76,14 @@
     activeCtrls = !activeCtrls
     activeRadio = !activeRadio
 
+    /**
+     * start/resume the Audio Context state = 'running'
+    */
     await Tone.start();
 
     if (!toneMic) {
       toneMic = new Tone.UserMedia().toDestination();
       toneContext = Tone.context;
-      
 
       toneMic.open().then((stream) => {
         console.log("mic", stream);
@@ -88,33 +93,47 @@
   }
 
   async function startRecord() {
-    console.log("start record stream", atcStream);
+    // console.log("start record stream", atcStream);
 
     if(!toneRecorder) {
       toneRecorder = new Tone.Recorder();
     }
- 
+    /**
+     * Recorder state = stopped on start and stop even on 1st time
+    */
+    console.log('recorder started', toneRecorder)
+    /**
+     * check if context state = 'running/stopped'
+    */
     await Tone.context.resume();
     
     toneMic.connect(toneRecorder);
 
     if(reverb) {
       reverb.connect(toneRecorder)
+      console.log('recording w/ reverb', reverb)
     }
     if(delay) {
       delay.connect(toneRecorder);
+      console.log('recording w/ delay', delay)
     }
     if(chorus) {
       chorus.connect(toneRecorder);
+      console.log('recording w/ chrs', chorus)
     }
     if(dirt) {
       dirt.connect(toneRecorder);
+      console.log('recording w/ dirt', dirt)
     }
 
     await toneRecorder.start();
   }
 
   async function stopRecord() {
+    // if(toneRecordBlob) {
+    //   toneRecordBlob = "";
+    // }
+    console.log('recorder stopped', toneRecorder)
     toneRecordBlob = await toneRecorder.stop();
     console.log("stop record stream ", atcStream);
     console.log("stop record tonecontext::", toneContext);
@@ -122,9 +141,13 @@
      * Cleanup - saving system resources
      */
     await toneMic.disconnect(toneRecorder);
+    toneRecorder.dispose()
     Tone.context.dispose();
     toneContext.rawContext.suspend();
-    toneMic.close();
+    /**
+     * close cause effects to not be available
+    */
+    // toneMic.close();
   }
 
   async function play() {
@@ -137,7 +160,9 @@
         await Tone.context.resume();
 
         // not need to be new player each time.
-        player = new Tone.Player({ url: audioBuffer }).toDestination();
+        if(!player) {
+          player = new Tone.Player({ url: audioBuffer }).toDestination();
+        }
         player.start();
       });
   }
@@ -208,15 +233,10 @@
   async function toggleReverb() {
     if (!reverb || reverb['_wasDisposed'] === true) {
       console.log('start reverb')
-      // this may have been started so need to check
-      // or setup listener to start on getMedia
-      // researd tone start/stop
       // await Tone.start();
-
-      /**
-       * if context state = suspended/running
-       * also need to check for started/stopped
-      */
+      if(toneMic.mute) {
+        toneMic.mute = false
+      }
       await Tone.context.resume()
       reverb = new Tone.Reverb({
         wet: 1,
@@ -227,6 +247,7 @@
 
     if (powerStatus.reverbOn) {
       powerStatus.reverbOn = false;
+      reverb = null
       console.log("reverb node", reverb);
       console.log("reverb status on should be false", powerStatus.reverbOn);
     } else {
@@ -238,11 +259,25 @@
   }
 
   function toggleDelay() {
+    // if(toneMic) {
+    //   toneMic.open().then((stream) => {
+    //     console.log("mic", stream);
+    //     atcStream = stream;
+    //   });
+    // }
+    if(toneMic.mute) {
+      toneMic.mute = false;
+    }
+    
     // needs tone.start
-    console.log("delay");
-    const options = { debug: true, delayTime: "4n", feedBack: 0.4 };
-    delay = new Tone.PingPongDelay(options).toDestination();
-    toneMic.connect(delay);
+    if(!delay) {
+      const options = { debug: true, delayTime: "4n", feedBack: 0.4 };
+      delay = new Tone.PingPongDelay(options).toDestination();
+      toneMic.connect(delay);
+      console.log("delay", delay, "mic is muted: ", toneMic.mute);
+    }
+    console.log("delay after", delay, "mic is muted: ", toneMic.mute);
+   
     
   }
 
