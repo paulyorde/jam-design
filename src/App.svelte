@@ -49,28 +49,36 @@
   let delayImgSrc = "https://icongr.am/jam/power.svg?size=30&color=f5f0f0"
   let chorusImgSrc = "https://icongr.am/jam/power.svg?size=30&color=f5f0f0"
   let distortionImgSrc = "https://icongr.am/jam/power.svg?size=30&color=f5f0f0"
+
   
-   $: if(powerStatus.reverbOn) {
-    console.log('reverb listener start')
-    reverbImgSrc = powerStatus.reverbImgSrcOff;
     /**
-     * if toneMic = currently toneMic is not being disposed - so this will be on and will connect reverb
+     * listener $effect
+     * example recorder
+     * would enable mic to be muted on delay when mic status changes w/o effects knowledge
+     * could disconnect effects on record stop
     */
-    if(toneMic) {
-      toneMic.connect(reverb);
-      console.log('reverb listener: on should be true', powerStatus.reverbOn)
-    }
+  
+  //  $: if(powerStatus.reverbOn) {
+  //   console.log('reverb listener start')
+  //   reverbImgSrc = powerStatus.reverbImgSrcOff;
+  //   /**
+  //    * if toneMic = currently toneMic is not being disposed - so this will be on and will connect reverb
+  //   */
+  //   if(toneMic) {
+  //     toneMic.connect(reverb);
+  //     console.log('reverb listener: on should be true', powerStatus.reverbOn)
+  //   }
 
-   } else {
-    reverbImgSrc = powerStatus.reverbImgSrcOn
+  //  } else {
+  //   reverbImgSrc = powerStatus.reverbImgSrcOn
 
-    if(toneMic && reverb) {
-      toneMic.disconnect(reverb)
-      reverb.dispose()
-      reverb = null
-      console.log('reverb listener on should be false', powerStatus.reverbOn)
-    }
-   }
+  //   if(toneMic && reverb) {
+  //     toneMic.disconnect(reverb)
+  //     reverb.dispose()
+  //     reverb = null
+  //     console.log('reverb listener on should be false', powerStatus.reverbOn)
+  //   }
+  //  }
 
   async function getMediaDevice() {
     activeCtrls = !activeCtrls
@@ -97,6 +105,8 @@
 
     if(!toneRecorder) {
       toneRecorder = new Tone.Recorder();
+      toneMic.connect(toneRecorder);
+
     }
     /**
      * Recorder state = stopped on start and stop even on 1st time
@@ -105,9 +115,8 @@
     /**
      * check if context state = 'running/stopped'
     */
-    await Tone.context.resume();
+    // await Tone.context.resume();
     
-    toneMic.connect(toneRecorder);
 
     if(reverb) {
       reverb.connect(toneRecorder)
@@ -135,8 +144,9 @@
     // }
     console.log('recorder stopped', toneRecorder)
     toneRecordBlob = await toneRecorder.stop();
-    console.log("stop record stream ", atcStream);
-    console.log("stop record tonecontext::", toneContext);
+    // console.log('blob:', toneRecordBlob)
+    // console.log("stop record stream ", atcStream);
+    // console.log("stop record tonecontext::", toneContext);
     /**
      * these cause not playing back 1st recording after starting record 2nd time
      * currently will play 1st recording, after 2nd recording started and stopped
@@ -153,6 +163,7 @@
   }
 
   async function play() {
+    
     toneRecordBlob
       .arrayBuffer()
       // decode is expensive - does tone make it faster - can this passed to worker
@@ -161,10 +172,14 @@
         console.log("blob", audioBuffer);
         await Tone.context.resume();
 
-        // not need to be new player each time.
-        if(!player) {
+        /** 
+         * todo:
+         * only needs one player
+         * needs the new url of next recording
+        */
+        // if(!player) {
           player = new Tone.Player({ url: audioBuffer }).toDestination();
-        }
+        // }
         player.start();
       });
   }
@@ -233,61 +248,93 @@
    * in recorder listener: if(reverb) reverb.connect(toneRecorder) else // reverb.disconnect(toneRecorder);
    */
   async function toggleReverb() {
+    if (powerStatus.reverbOn) {
+      powerStatus.reverbOn = false;
+      // reverb = null
+      // console.log("reverb node", reverb);
+      console.log("reverb status on should be false", powerStatus.reverbOn);
+    } else {
+      powerStatus.reverbOn = true;
+      // console.log("reverb node", reverb);
+      console.log("reverb status on should be true", powerStatus.reverbOn);
+    }
+
+    if(toneMic.mute) {
+        toneMic.mute = false
+      }
     if (!reverb || reverb['_wasDisposed'] === true) {
       console.log('start reverb')
       // await Tone.start();
-      if(toneMic.mute) {
-        toneMic.mute = false
-      }
-      await Tone.context.resume()
+      
+      // await Tone.context.resume()
       reverb = new Tone.Reverb({
         wet: 1,
         decay: .9,
         preDelay: .4,
       }).toDestination();
+
+      toneMic.connect(reverb);
+      console.log('reverb listener on should be true', powerStatus.reverbOn)
+      
+    } else {
+      toneMic.disconnect(reverb)
+      reverb.dispose()
+      reverb = null
+      console.log('reverb listener on should be false', powerStatus.reverbOn)
     }
 
-    if (powerStatus.reverbOn) {
-      powerStatus.reverbOn = false;
-      reverb = null
-      console.log("reverb node", reverb);
-      console.log("reverb status on should be false", powerStatus.reverbOn);
-    } else {
-      powerStatus.reverbOn = true;
-      console.log("reverb node", reverb);
-      console.log("reverb status on should be true", powerStatus.reverbOn);
-    
-    }
+   
   }
 
   function toggleDelay() {
-    // if(toneMic) {
-    //   toneMic.open().then((stream) => {
-    //     console.log("mic", stream);
-    //     atcStream = stream;
-    //   });
-    // }
+    if(powerStatus.delayOn) {
+      powerStatus.delayOn = false
+    } else {
+      powerStatus.delayOn = true
+    }
+
     if(toneMic.mute) {
       toneMic.mute = false;
     }
     
     // needs tone.start
-    if(!delay) {
+    if(!delay || delay['_wasDisposed'] === true) {
       const options = { debug: true, delayTime: "4n", feedBack: 0.4 };
       delay = new Tone.PingPongDelay(options).toDestination();
       toneMic.connect(delay);
       console.log("delay", delay, "mic is muted: ", toneMic.mute);
+    } else {
+      delay.disconnect()
+      delay.dispose()
+      delay = null;
+      console.log("delay", delay, "mic is muted: ", toneMic.mute);
     }
+
     console.log("delay after", delay, "mic is muted: ", toneMic.mute);
-   
     
   }
 
   function toggleChours() {
-    // needs tone.start
-    console.log("chours");
-    chorus = new Tone.Chorus(10, 0, 1).toDestination();
-    toneMic.connect(chorus);
+    if(powerStatus.chorusOn) {
+      powerStatus.chorusOn = false
+    } else {
+      powerStatus.chorusOn = true
+    }
+
+    if(toneMic.mute) {
+      toneMic.mute = false;
+    }
+
+    if(!chorus || chorus['_wasDisposed'] === true) {
+      chorus = new Tone.Chorus(2, .1, 1).toDestination();
+      toneMic.connect(chorus);
+      console.log("chours", chorus);
+    } else {
+      chorus.disconnect()
+      chorus.dispose()
+      chorus = null;
+      console.log("chours", chorus);
+    }
   }
 
   /**
@@ -295,9 +342,26 @@
    * todo: research options overtone , input:gain, wet/dry to fix latency
    */
   function toggleDistortion() {
-    console.log('distortion')
-    dirt = new Tone.Distortion(1).toDestination();
-    toneMic.connect(dirt);
+    if(powerStatus.distortionOn) {
+      powerStatus.distortionOn = false
+    } else {
+      powerStatus.distortionOn = true
+    }
+
+    if(toneMic.mute) {
+      toneMic.mute = false;
+    }
+
+    if(!dirt || dirt['_wasDisposed'] === true) {
+      dirt = new Tone.Distortion(1).toDestination();
+      toneMic.connect(dirt);
+      console.log('distortion', dirt)
+    } else {
+      dirt.disconnect()
+      dirt.dispose()
+      dirt = null;
+      console.log("chours", dirt);
+    }
   }
 </script>
 
