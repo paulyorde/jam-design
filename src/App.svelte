@@ -91,6 +91,7 @@
 
     if (!toneMic) {
       toneMic = new Tone.UserMedia().toDestination();
+      toneMic.mute = true;
       toneContext = Tone.context;
 
       toneMic.open().then((stream) => {
@@ -116,7 +117,9 @@
      * check if context state = 'running/stopped'
     */
     // await Tone.context.resume();
-    
+    // if(toneMic.mute) {
+    //   toneMic.mute = false
+    // }
 
     if(reverb) {
       reverb.connect(toneRecorder)
@@ -155,6 +158,10 @@
     // toneRecorder.dispose()
     Tone.context.dispose();
     toneContext.rawContext.suspend();
+
+    // if(!toneMic.mute) {
+    //   toneMic.mute = true;
+    // }
    
     /**
      * close cause effects to not be available
@@ -178,16 +185,24 @@
          * needs the new url of next recording
         */
         // if(!player) {
-          player = new Tone.Player({ url: audioBuffer }).toDestination();
+        player = new Tone.Player({ url: audioBuffer }).toDestination();
         // }
+        // if(toneMic.mute) {
+        //   toneMic.mute = false
+        // }
+
         player.start();
       });
   }
 
   function stop() {
+    // if(!toneMic.mute) {
+    //       toneMic.mute = true
+    //     }
     player.stop();
     console.log("stop");
     // toneContext.rawContext.suspend();
+
   }
 
   /**
@@ -220,8 +235,8 @@
     recordStatus.isRecording = !recordStatus.isRecording;
     if (recordStatus.isRecording) {
       recoredSrc = recordStatus.stop;
-      startRecord();
       toneMic.mute = false;
+      startRecord();
     } else {
       recoredSrc = recordStatus.record;
       stopRecord();
@@ -259,9 +274,7 @@
       console.log("reverb status on should be true", powerStatus.reverbOn);
     }
 
-    if(toneMic.mute) {
-        toneMic.mute = false
-      }
+    
     if (!reverb || reverb['_wasDisposed'] === true) {
       console.log('start reverb')
       // await Tone.start();
@@ -275,8 +288,15 @@
 
       toneMic.connect(reverb);
       console.log('reverb listener on should be true', powerStatus.reverbOn)
+
+      if(toneMic.mute) {
+        toneMic.mute = false
+      }
       
     } else {
+      if(!toneMic.mute) {
+        toneMic.mute = true
+      }
       toneMic.disconnect(reverb)
       reverb.dispose()
       reverb = null
@@ -293,17 +313,19 @@
       powerStatus.delayOn = true
     }
 
-    if(toneMic.mute) {
-      toneMic.mute = false;
-    }
-    
     // needs tone.start
     if(!delay || delay['_wasDisposed'] === true) {
       const options = { debug: true, delayTime: "4n", feedBack: 0.4 };
       delay = new Tone.PingPongDelay(options).toDestination();
       toneMic.connect(delay);
       console.log("delay", delay, "mic is muted: ", toneMic.mute);
+      if(toneMic.mute) {
+      toneMic.mute = false;
+    }
     } else {
+      if(!toneMic.mute) {
+        toneMic.mute = true;
+      }
       delay.disconnect()
       delay.dispose()
       delay = null;
@@ -321,15 +343,19 @@
       powerStatus.chorusOn = true
     }
 
-    if(toneMic.mute) {
-      toneMic.mute = false;
-    }
-
     if(!chorus || chorus['_wasDisposed'] === true) {
       chorus = new Tone.Chorus(2, .1, 1).toDestination();
       toneMic.connect(chorus);
       console.log("chours", chorus);
+      
+      if(toneMic.mute) {
+        toneMic.mute = false;
+      }
     } else {
+      if(!toneMic.mute) {
+        toneMic.mute = true;
+      }
+
       chorus.disconnect()
       chorus.dispose()
       chorus = null;
@@ -348,19 +374,22 @@
       powerStatus.distortionOn = true
     }
 
-    if(toneMic.mute) {
-      toneMic.mute = false;
-    }
-
     if(!dirt || dirt['_wasDisposed'] === true) {
       dirt = new Tone.Distortion(1).toDestination();
       toneMic.connect(dirt);
       console.log('distortion', dirt)
+      if(toneMic.mute) {
+      toneMic.mute = false;
+    }
     } else {
+      if(!toneMic.mute) {
+        toneMic.mute = true;
+      }
+
       dirt.disconnect()
       dirt.dispose()
       dirt = null;
-      console.log("chours", dirt);
+      console.log("distortion", dirt);
     }
   }
 </script>
