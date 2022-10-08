@@ -15,7 +15,7 @@
   let toneContext;
   let toneRecordBlob = null;
   let player;
-  let atcStream;
+  let audioStream;
   let reverb = null;
   let delay = null;
   let chorus = null;
@@ -50,12 +50,21 @@
   let chorusImgSrc = "https://icongr.am/jam/power.svg?size=30&color=f5f0f0"
   let distortionImgSrc = "https://icongr.am/jam/power.svg?size=30&color=f5f0f0"
 
+  /**
+   * NOTES
+   * outputLatency = when speakers produce sound
+  */
   
     /**
      * listener $effect
      * example recorder
      * would enable mic to be muted on delay when mic status changes w/o effects knowledge
      * could disconnect effects on record stop
+     * 
+     * OR
+     * 
+     * audioContextState = toneContext.state = running || suspended
+     * audioStreamState = toneMic.state = stopped || started
     */
   
   //  $: if(powerStatus.reverbOn) {
@@ -85,19 +94,34 @@
     activeRadio = !activeRadio
 
     /**
-     * start/resume the Audio Context state = 'running'
+     * start the Audio Context state = 'running'
+     *
     */
     await Tone.start();
 
+    // mute the raw context? to get rid of initial noise on start ?
+
+
+
     if (!toneMic) {
-      toneMic = new Tone.UserMedia().toDestination();
+
+      // let webMic = await navigator.mediaDevices.getUserMedia({ audio: {
+      //   echoCancellation: false,
+      //   autoGainControl: false,
+      //   noiseSuppression: false,
+      //   latency: 0
+      // }});
+
+      // toneMic = Tone.context.set(webMic)
+
+      toneMic = new Tone.UserMedia({volume: -30, mute: true}).toDestination();
       toneMic.mute = true;
       toneContext = Tone.context;
 
-      toneMic.open().then((stream) => {
-        console.log("mic", stream);
-        atcStream = stream;
-      });
+      audioStream = await toneMic.open();
+
+      console.log("mic", audioStream);
+      // console.log('chicken or egg')
     }
   }
 
@@ -106,6 +130,7 @@
 
     if(!toneRecorder) {
       toneRecorder = new Tone.Recorder();
+      audioStream.volume.value = 0
       toneMic.connect(toneRecorder);
 
     }
@@ -120,6 +145,9 @@
     // if(toneMic.mute) {
     //   toneMic.mute = false
     // }
+    if(audioStream) {
+      audioStream.volume.value = -5
+    }
 
     if(reverb) {
       reverb.connect(toneRecorder)
@@ -277,8 +305,6 @@
     
     if (!reverb || reverb['_wasDisposed'] === true) {
       console.log('start reverb')
-      // await Tone.start();
-      
       // await Tone.context.resume()
       reverb = new Tone.Reverb({
         wet: 1,
@@ -398,31 +424,36 @@
 <main>
   <!-- Top Bar -->
   <Container>
-    <Row style="color: #5b87c2; font-size: x-large; height:200px; font-family: fantasy;margin-top:10px;">
+    <Row style="color: #6babff; font-size: x-large; height:200px; font-family: fantasy;margin-top:10px;">
       <Col size="6">
         <!-- Logo -->
         <div
           style="display: flex;
           align-items: center;"
         >
-          <h6>Song Pad</h6>
+          <!-- <h6>Song Pad</h6> -->
           <!-- svelte-ignore a11y-missing-attribute -->
           <!-- https://icongr.am/jam/station.svg?size=26&color=acc0d3 -->
-          <img src="public\icons8-radio-tower-48.png" />
+          <button style="background: #ffffff !important; max-width: initial !important; display: flex !important; align-items: center !important; color: rgb(107, 171, 255);" on:click={getMediaDevice}>
+            <!-- svelte-ignore a11y-missing-attribute -->
+            Song Pad
+            <img src="public\icons8-radio-tower-48.png" />
+          </button>
+          <!-- <img src="public\icons8-radio-tower-48.png" /> -->
         </div>
       </Col>
       <!-- Start Mic -->
-      {#if !activeRadio}
+      <!-- {#if !activeRadio} -->
       <Container>
         <Row style="margin-bottom: 20px">
           <Col size="5"></Col>
-          <button on:click={getMediaDevice} class:activeRadio transition:fade>
+          <!-- <button style="background: #ffffff !important;" on:click={getMediaDevice} class:activeRadio transition:fade>
             <!-- svelte-ignore a11y-missing-attribute -->
-            <img src="public\icons8-radio-tower-48.png" />
-          </button>
+            <!-- <img src="public\icons8-radio-tower-48.png" />
+          </button> -->
         </Row>
       </Container>
-      {/if}
+      <!-- {/if} -->
     </Row>
   </Container>
 
@@ -531,7 +562,7 @@
   input[type="reset"],
   input[type="submit"],
   button {
-    background-color: #5a86c1 !important;
+    background-color: #6684ff !important;
     border: none;
     min-width: 95px;
     max-width: 95px;
