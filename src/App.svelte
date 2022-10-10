@@ -52,7 +52,7 @@
 
   /**
    * NOTES
-   * outputLatency = when speakers produce sound
+   * outputLatency = time till speakers produce sound
   */
   
     /**
@@ -65,7 +65,18 @@
      * 
      * audioContextState = toneContext.state = running || suspended
      * audioStreamState = toneMic.state = stopped || started
+     * 
+     * suspend/stop when nothing in use
+     * otherwise just disconnect and dispose
+     * 
+     * if suspended -> await Tone.context.resume();
     */
+    $: if(powerStatus.micOn) {
+      console.log('state', toneContext.state)
+
+    }
+
+    
   
   //  $: if(powerStatus.reverbOn) {
   //   console.log('reverb listener start')
@@ -115,7 +126,8 @@
       // toneMic = Tone.context.set(webMic)
 
       toneMic = new Tone.UserMedia({volume: -30, mute: true}).toDestination();
-      toneMic.mute = true;
+      powerStatus.micOn = true;
+      // toneMic.mute = true;
       toneContext = Tone.context;
 
       audioStream = await toneMic.open();
@@ -146,7 +158,7 @@
     //   toneMic.mute = false
     // }
     if(audioStream) {
-      audioStream.volume.value = -5
+      audioStream.volume.value = 0
     }
 
     if(reverb) {
@@ -184,6 +196,10 @@
      */
     // await toneMic.disconnect(toneRecorder);
     // toneRecorder.dispose()
+    
+    /** 
+     * need to context.resume when start record a second time.
+    */
     Tone.context.dispose();
     toneContext.rawContext.suspend();
 
@@ -320,9 +336,9 @@
       }
       
     } else {
-      if(!toneMic.mute) {
-        toneMic.mute = true
-      }
+      // if(!toneMic.mute) {
+      //   toneMic.mute = true
+      // }
       toneMic.disconnect(reverb)
       reverb.dispose()
       reverb = null
@@ -349,9 +365,9 @@
       toneMic.mute = false;
     }
     } else {
-      if(!toneMic.mute) {
-        toneMic.mute = true;
-      }
+      // if(!toneMic.mute) {
+      //   toneMic.mute = true;
+      // }
       delay.disconnect()
       delay.dispose()
       delay = null;
@@ -378,9 +394,9 @@
         toneMic.mute = false;
       }
     } else {
-      if(!toneMic.mute) {
-        toneMic.mute = true;
-      }
+      // if(!toneMic.mute) {
+      //   toneMic.mute = true;
+      // }
 
       chorus.disconnect()
       chorus.dispose()
@@ -405,12 +421,12 @@
       toneMic.connect(dirt);
       console.log('distortion', dirt)
       if(toneMic.mute) {
-      toneMic.mute = false;
-    }
-    } else {
-      if(!toneMic.mute) {
-        toneMic.mute = true;
+       toneMic.mute = false;
       }
+    } else {
+      // if(!toneMic.mute) {
+      //   toneMic.mute = true;
+      // }
 
       dirt.disconnect()
       dirt.dispose()
