@@ -1,0 +1,8 @@
+
+
+      // let webMic = await navigator.mediaDevices.getUserMedia({ audio: {
+      //   echoCancellation: false,
+      //   autoGainControl: false,
+      //   noiseSuppression: false,
+      //   latency: 0
+      // }});

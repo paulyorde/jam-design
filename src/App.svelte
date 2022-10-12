@@ -40,12 +40,12 @@
     delayOn: false,
     chorusOn: false,
     distortionOn: false,
-    reverbImgSrcOff: "https://icongr.am/jam/power.svg?size=30&color=black",
-    reverbImgSrcOn: "https://icongr.am/jam/power.svg?size=30&color=f5f0f0",
+    reverbImgSrcOn: "https://icongr.am/jam/power.svg?size=30&color=black",
+    reverbImgSrcOff: "https://icongr.am/jam/power.svg?size=30&color=f5f0f0",
   
   };
   let playSrc = playStatus.play;
-  let reverbImgSrc = powerStatus.reverbImgSrcOn;
+  let reverbImgSrc = powerStatus.reverbImgSrcOff;
   let delayImgSrc = "https://icongr.am/jam/power.svg?size=30&color=f5f0f0"
   let chorusImgSrc = "https://icongr.am/jam/power.svg?size=30&color=f5f0f0"
   let distortionImgSrc = "https://icongr.am/jam/power.svg?size=30&color=f5f0f0"
@@ -77,6 +77,8 @@
     }
 
     
+
+    
   
   //  $: if(powerStatus.reverbOn) {
   //   console.log('reverb listener start')
@@ -106,61 +108,36 @@
 
     /**
      * start the Audio Context state = 'running'
-     *
     */
     await Tone.start();
 
-    // mute the raw context? to get rid of initial noise on start ?
-
-
-
     if (!toneMic) {
-
-      // let webMic = await navigator.mediaDevices.getUserMedia({ audio: {
-      //   echoCancellation: false,
-      //   autoGainControl: false,
-      //   noiseSuppression: false,
-      //   latency: 0
-      // }});
-
-      // toneMic = Tone.context.set(webMic)
-
       toneMic = new Tone.UserMedia({volume: -30, mute: true}).toDestination();
       powerStatus.micOn = true;
-      // toneMic.mute = true;
       toneContext = Tone.context;
-
       audioStream = await toneMic.open();
-
       console.log("mic", audioStream);
       // console.log('chicken or egg')
     }
   }
 
   async function startRecord() {
-    // console.log("start record stream", atcStream);
-
     if(!toneRecorder) {
       toneRecorder = new Tone.Recorder();
       audioStream.volume.value = 0
       toneMic.connect(toneRecorder);
-
     }
-    /**
-     * Recorder state = stopped on start and stop even on 1st time
-    */
     console.log('recorder started', toneRecorder)
     /**
      * check if context state = 'running/stopped'
     */
-    // await Tone.context.resume();
+    await Tone.context.resume();
     // if(toneMic.mute) {
     //   toneMic.mute = false
     // }
     if(audioStream) {
       audioStream.volume.value = 0
     }
-
     if(reverb) {
       reverb.connect(toneRecorder)
       console.log('recording w/ reverb', reverb)
@@ -187,8 +164,6 @@
     // }
     console.log('recorder stopped', toneRecorder)
     toneRecordBlob = await toneRecorder.stop();
-    // console.log('blob:', toneRecordBlob)
-    // console.log("stop record stream ", atcStream);
     // console.log("stop record tonecontext::", toneContext);
     /**
      * these cause not playing back 1st recording after starting record 2nd time
@@ -200,7 +175,7 @@
     /** 
      * need to context.resume when start record a second time.
     */
-    Tone.context.dispose();
+    // Tone.context.dispose();
     toneContext.rawContext.suspend();
 
     // if(!toneMic.mute) {
@@ -300,25 +275,22 @@
     }
   }
 
-  /**
-   * todo
-   * start effects first , then start record.
-   * 
-   * in recorder listener: if(reverb) reverb.connect(toneRecorder) else // reverb.disconnect(toneRecorder);
-   */
-  async function toggleReverb() {
+  function toggleReverbStatus() {
     if (powerStatus.reverbOn) {
       powerStatus.reverbOn = false;
+      reverbImgSrc = powerStatus.reverbImgSrcOff;
+      startReverb()
       // reverb = null
-      // console.log("reverb node", reverb);
       console.log("reverb status on should be false", powerStatus.reverbOn);
     } else {
       powerStatus.reverbOn = true;
-      // console.log("reverb node", reverb);
+      reverbImgSrc = powerStatus.reverbImgSrcOn;
+      stopReverb()
       console.log("reverb status on should be true", powerStatus.reverbOn);
     }
+  }
 
-    
+  function createReverb() {
     if (!reverb || reverb['_wasDisposed'] === true) {
       console.log('start reverb')
       // await Tone.context.resume()
@@ -327,25 +299,30 @@
         decay: .9,
         preDelay: .4,
       }).toDestination();
-
-      toneMic.connect(reverb);
-      console.log('reverb listener on should be true', powerStatus.reverbOn)
-
-      if(toneMic.mute) {
-        toneMic.mute = false
-      }
-      
-    } else {
-      // if(!toneMic.mute) {
-      //   toneMic.mute = true
-      // }
-      toneMic.disconnect(reverb)
-      reverb.dispose()
-      reverb = null
-      console.log('reverb listener on should be false', powerStatus.reverbOn)
     }
+  }
 
-   
+  function startReverb() {
+    toneMic.connect(reverb);
+    console.log('reverb listener on should be true', powerStatus.reverbOn)
+  }
+
+  function stopReverb() {
+    toneMic.disconnect(reverb)
+    reverb.dispose()
+    reverb = null
+    console.log('reverb listener on should be false', powerStatus.reverbOn)
+  }
+
+  /**
+   * todo
+   * start effects first , then start record.
+   * 
+   * in recorder listener: if(reverb) reverb.connect(toneRecorder) else // reverb.disconnect(toneRecorder);
+   */
+  async function toggleReverb() {
+    createReverb()
+    toggleReverbStatus()
   }
 
   function toggleDelay() {
@@ -434,6 +411,7 @@
       console.log("distortion", dirt);
     }
   }
+
 </script>
 
 

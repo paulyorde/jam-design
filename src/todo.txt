@@ -1,0 +1,40 @@
+1. check effects state on dispose, connect, disconnect
+ - playerStop 
+    - context.suspend -> resume on play
+ - recordStart
+    - resume 
+ - recordStop
+    - suspend 
+    - dispose? 
+
+
+- visualize effects on / off
+
+
+2. create functions for effects toggeling
+    - createEffect(effectToCreateString)
+    - toggleEffectStatus
+        - isOn? -> stop()
+        - isOff -> start()
+    - toggleEffectOn?()
+        - powerStatus
+        - mute 
+        - connect
+    - toggleEffectOff?()
+        - powerStatus
+        - mute 
+        - disconnect
+
+3. streamline effects up to recording 
+- should keep effects on after stop recordin
+- should message if effects cliked after recording started
+
+4. get id of effect object, 
+- if disposing do we need to make another?
+
+5. distortion isn't working 
+- build custome one (audio context with 0 output latency) or use effects plugin 
+
+
+6. download ins't actually mp3.
+- needs sample rate
