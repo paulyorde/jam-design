@@ -279,13 +279,13 @@
     if (powerStatus.reverbOn) {
       powerStatus.reverbOn = false;
       reverbImgSrc = powerStatus.reverbImgSrcOff;
-      startReverb()
+      stopReverb()
       // reverb = null
       console.log("reverb status on should be false", powerStatus.reverbOn);
     } else {
       powerStatus.reverbOn = true;
       reverbImgSrc = powerStatus.reverbImgSrcOn;
-      stopReverb()
+      startReverb()
       console.log("reverb status on should be true", powerStatus.reverbOn);
     }
   }
@@ -303,15 +303,22 @@
   }
 
   function startReverb() {
-    toneMic.connect(reverb);
-    console.log('reverb listener on should be true', powerStatus.reverbOn)
+      console.log('...connecting reverb')
+      toneMic.mute = false
+      toneMic.connect(reverb);
+      console.log('reverb node', reverb)
   }
 
   function stopReverb() {
+    toneMic.mute = true;
     toneMic.disconnect(reverb)
     reverb.dispose()
+    if(reverb['_wasDisposed'] === true) {
+      console.log('reverb was dispposed')
+    }
     reverb = null
-    console.log('reverb listener on should be false', powerStatus.reverbOn)
+
+    console.log('reverb node', reverb)
   }
 
   /**
