@@ -54,6 +54,10 @@
     
   // };
 
+  /**
+   * $: = listener to exec code and update properties 
+  */
+
 
   /**
    * NOTES
@@ -102,7 +106,7 @@
       
       if(toneMic) {
         // toneMic.mute = toggleMuteMic()
-       // Tone.context.resume()
+        // Tone.context.resume()
 
         console.log('powerstatus:: mic muted should be false', powerStatus.toneMicMute)
       }
@@ -148,7 +152,7 @@
      * start the Audio Context state = 'running'
     */
     await Tone.start();
-    await Tone.context.resume();
+    // await Tone.context.resume();
 
 
     if (!toneMic) {
@@ -159,6 +163,90 @@
       console.log("mic", audioStream);
 
       // console.log('chicken or egg')
+    }
+  }
+
+  function togglePlayStatus() {
+    playStatus.isPlaying = !playStatus.isPlaying;
+
+    if (playStatus.isPlaying) {
+      playSrc = playStatus.stop;
+      play();
+    } else {
+      playSrc = playStatus.play;
+      stop();
+    }
+  }
+
+  async function play() {
+    
+    toneRecordBlob
+      .arrayBuffer()
+      // decode is expensive - does tone make it faster - can this passed to worker
+      .then((arrayBuffer) => toneContext.decodeAudioData(arrayBuffer))
+      .then(async (audioBuffer) => {
+        console.log("blob", audioBuffer);
+
+        /** 
+         * todo:
+         * only needs one player
+         * needs the new url of next recording
+        */
+        // if(!player) {
+        player = new Tone.Player({ url: audioBuffer }).toDestination();
+        // }
+        // if(toneMic.mute) {
+        //   toneMic.mute = false
+        // }
+
+
+        if(toneContext.state === 'running') {
+          console.log('player should be started', player.state)
+          console.log('player should be running', player.context.state)
+        } else {
+          await Tone.context.resume()
+        }
+
+        player.start();
+
+        console.log('player', player)
+      });
+  }
+
+  function stop() {
+    // if(!toneMic.mute) {
+    //       toneMic.mute = true
+    //     }
+    player.stop();
+    console.log("stop");
+    toneContext.rawContext.suspend();
+
+    if(player) {
+      console.log('player should be stopped', player.state)
+      console.log('player should be suspended', player.context.state)
+      player.dispose()
+    }
+
+    console.log('player', player)
+
+
+  }
+
+  function toggleRecordStatus() {
+    recordStatus.isRecording = !recordStatus.isRecording;
+
+    if (recordStatus.isRecording) {
+      recoredSrc = recordStatus.stop;
+      // toneMic.mute = false;
+      powerStatus.toneMicMute = false
+      startRecord();
+    } else {
+      recoredSrc = recordStatus.record;
+      stopRecord();
+      // toneMic.mute = true;
+      powerStatus.toneMicMute = true
+
+
     }
   }
 
@@ -242,116 +330,6 @@
     // toneMic.close();
   }
 
-  async function play() {
-    
-    toneRecordBlob
-      .arrayBuffer()
-      // decode is expensive - does tone make it faster - can this passed to worker
-      .then((arrayBuffer) => toneContext.decodeAudioData(arrayBuffer))
-      .then(async (audioBuffer) => {
-        console.log("blob", audioBuffer);
-
-        /** 
-         * todo:
-         * only needs one player
-         * needs the new url of next recording
-        */
-        // if(!player) {
-        player = new Tone.Player({ url: audioBuffer }).toDestination();
-        // }
-        // if(toneMic.mute) {
-        //   toneMic.mute = false
-        // }
-
-
-        if(toneContext.state === 'running') {
-          console.log('player should be started', player.state)
-          console.log('player should be running', player.context.state)
-        } else {
-          await Tone.context.resume()
-        }
-
-        player.start();
-
-        console.log('player', player)
-      });
-  }
-
-  function stop() {
-    // if(!toneMic.mute) {
-    //       toneMic.mute = true
-    //     }
-    player.stop();
-    console.log("stop");
-    toneContext.rawContext.suspend();
-
-    if(player) {
-      console.log('player should be stopped', player.state)
-      console.log('player should be suspended', player.context.state)
-      player.dispose()
-    }
-
-    console.log('player', player)
-
-
-  }
-
-  /**
-   * V2
-   * download to computer
-   * OR
-   * dowload to track pad (vrs, chrs, bridge, etc)
-   */
-  async function download() {
-    console.log("blob");
-    toneRecordBlob
-      .arrayBuffer()
-      .then((arrayBuffer) => toneContext.decodeAudioData(arrayBuffer))
-      .then((audioBuffer) => {
-        console.log("blob", audioBuffer);
-
-        // @ts-ignore
-        encoder(
-          audioBuffer,
-          "WAV",
-          (v) => console.log("happeing now", v),
-          (blob) => {
-            saveAs(blob, "sound.mp3");
-          }
-        );
-      });
-  }
-
-  function toggleRecordStatus() {
-    recordStatus.isRecording = !recordStatus.isRecording;
-
-    if (recordStatus.isRecording) {
-      recoredSrc = recordStatus.stop;
-      // toneMic.mute = false;
-      powerStatus.toneMicMute = false
-      startRecord();
-    } else {
-      recoredSrc = recordStatus.record;
-      stopRecord();
-      // toneMic.mute = true;
-      powerStatus.toneMicMute = true
-
-
-    }
-  }
-
-  function togglePlayStatus() {
-    playStatus.isPlaying = !playStatus.isPlaying;
-
-    if (playStatus.isPlaying) {
-      playSrc = playStatus.stop;
-      play();
-    } else {
-      playSrc = playStatus.play;
-      stop();
-    }
-  }
-
   function toggleReverbStatus() {
    
         if (powerStatus.reverbOn) {
@@ -374,7 +352,8 @@
   
 
   
-  async function createReverb() {
+  
+    async function createReverb() {
     if (!reverb || reverb['_wasDisposed'] === true) {
       console.log('start reverb')
       reverb = new Tone.Reverb({
@@ -394,8 +373,9 @@
     // toneMic.connect(reverb);
     if(toneContext.state === 'running') {
       if(audioStream) {
-      audioStream.volume.value = 0
-    }
+        audioStream.volume.value = 0
+      }
+
       toneMic.connect(reverb);
 
       console.log('tone context running = ', toneContext.state)
@@ -523,6 +503,32 @@
       dirt = null;
       console.log("distortion", dirt);
     }
+  }
+
+  /**
+   * V2
+   * download to computer
+   * OR
+   * dowload to track pad (vrs, chrs, bridge, etc)
+   */
+   async function download() {
+    console.log("blob");
+    toneRecordBlob
+      .arrayBuffer()
+      .then((arrayBuffer) => toneContext.decodeAudioData(arrayBuffer))
+      .then((audioBuffer) => {
+        console.log("blob", audioBuffer);
+
+        // @ts-ignore
+        encoder(
+          audioBuffer,
+          "WAV",
+          (v) => console.log("happeing now", v),
+          (blob) => {
+            saveAs(blob, "sound.mp3");
+          }
+        );
+      });
   }
 
 </script>

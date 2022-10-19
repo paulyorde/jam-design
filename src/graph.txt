@@ -1,0 +1,5 @@
+when any process is on
+then mic should be unmuted or running
+
+
+then mic should be muted or context suspended 

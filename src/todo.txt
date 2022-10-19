@@ -1,3 +1,9 @@
+if recorder has started - message and condition for effect to not start.
+
+if effect is on when stop record 
+then effect should remain on
+
+
 1. check effects state on dispose, connect, disconnect
  - playerStop 
     - context.suspend -> resume on play

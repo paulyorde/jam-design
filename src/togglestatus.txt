@@ -41,3 +41,27 @@
         break;
     }
   }
+
+
+  
+  //  $: if(powerStatus.reverbOn) {
+  //   console.log('reverb listener start')
+  //   reverbImgSrc = powerStatus.reverbImgSrcOff;
+  //   /**
+  //    * if toneMic = currently toneMic is not being disposed - so this will be on and will connect reverb
+  //   */
+  //   if(toneMic) {
+  //     toneMic.connect(reverb);
+  //     console.log('reverb listener: on should be true', powerStatus.reverbOn)
+  //   }
+
+  //  } else {
+  //   reverbImgSrc = powerStatus.reverbImgSrcOn
+
+  //   if(toneMic && reverb) {
+  //     toneMic.disconnect(reverb)
+  //     reverb.dispose()
+  //     reverb = null
+  //     console.log('reverb listener on should be false', powerStatus.reverbOn)
+  //   }
+  //  }
