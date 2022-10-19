@@ -93,19 +93,28 @@
       // let micMuted = true;
 
       if(toneMic) {
-        // toneMic.mute = toggleMuteMic()
         console.log('powerstatus:: mic muted should be true:',powerStatus.toneMicMute)
         // if(!toneRecorder) {
         // }
         // Tone.context.rawContext.suspend(0)
-        if(!reverb)
+
+        /**
+         * if isrecording not suspend 
+         * if reverbOn not suspend
+         * if reverbOn and notRecording not suspend
+        */
+        if((!powerStatus.reverbOn && !recordStatus.isRecording) ) {
          toneContext.rawContext.suspend()
-      }
+
+        }
+
+        // if(!reverb)
+        //  toneContext.rawContext.suspend()
+        }
     } 
     else if(powerStatus.toneMicMute === false) {
       
       if(toneMic) {
-        // toneMic.mute = toggleMuteMic()
         // Tone.context.resume()
 
         console.log('powerstatus:: mic muted should be false', powerStatus.toneMicMute)
@@ -139,7 +148,12 @@
       return micMuted;
     }
 
-    
+    /**
+     * start reverb
+     * start record
+     * stop reverb
+     * shuts of record
+     */
 
     
   
