@@ -80,83 +80,31 @@
      * 
      * if suspended -> await Tone.context.resume();
     */
-    $: if(powerStatus.micOn) {
-      console.log('state', toneContext.state)
+  $: if(powerStatus.micOn) {
+    console.log('state', toneContext.state)
 
+  }
+
+  /**
+   * @description Suspend/Mute 
+  */
+  $: if(powerStatus.toneMicMute)  {
+    if(toneMic) {
+      console.log('powerstatus:: mic muted should be true:',powerStatus.toneMicMute)
+
+      if((!powerStatus.reverbOn && !recordStatus.isRecording && !powerStatus.delayOn) ) {
+        toneContext.rawContext.suspend()
+      }
     }
-
+  } else if(powerStatus.toneMicMute === false) {
     /**
-     * only changes when toneMic changes 
-     * should change when any process changes (record, effect, play)
+     * set up Svelet await syntax
+     * await toneContext.rawcontext.resume()
     */
-    $: if(powerStatus.toneMicMute)  {
-      // let micMuted = true;
-
-      if(toneMic) {
-        console.log('powerstatus:: mic muted should be true:',powerStatus.toneMicMute)
-        // if(!toneRecorder) {
-        // }
-        // Tone.context.rawContext.suspend(0)
-
-        /**
-         * if isrecording not suspend 
-         * if reverbOn not suspend
-         * if reverbOn and notRecording not suspend
-        */
-        if((!powerStatus.reverbOn && !recordStatus.isRecording) ) {
-         toneContext.rawContext.suspend()
-
-        }
-
-        // if(!reverb)
-        //  toneContext.rawContext.suspend()
-        }
-    } 
-    else if(powerStatus.toneMicMute === false) {
-      
-      if(toneMic) {
-        // Tone.context.resume()
-
-        console.log('powerstatus:: mic muted should be false', powerStatus.toneMicMute)
-      }
+    if(toneMic) {
+      console.log('powerstatus:: mic muted should be false', powerStatus.toneMicMute)
     }
-
-
-    function toggleMuteMic() {
-      console.log('mute mic called::')
-
-      let micMuted = true;
-      if(recordStatus.isRecording || powerStatus.reverbOn) {
-        micMuted = false;
-        console.log('either recording or reverb should be ON')
-        console.log('mic muted should be false', micMuted)
-        console.log('reverb status', powerStatus.reverbOn)
-      } 
-      else {
-        micMuted = true
-        // toneContext.rawContext.suspend()
-        console.log('either recording or reverb should be OFF')
-        console.log('mic muted should be true', micMuted)
-      }
-      // if(powerStatus.reverbOn) {
-      //   isOn = false
-      // }
-      // if player is playing turn off mic?
-      if(playStatus.isPlaying) {
-        // isOn = true
-      }
-      return micMuted;
-    }
-
-    /**
-     * start reverb
-     * start record
-     * stop reverb
-     * shuts of record
-     */
-
-    
-  
+  }
 
   async function getMediaDevice() {
     activeCtrls = !activeCtrls
@@ -214,6 +162,10 @@
         // }
 
 
+        /**
+         * state should be suspened from record/effect toggles
+         * needs to resume to play
+        */
         if(toneContext.state === 'running') {
           console.log('player should be started', player.state)
           console.log('player should be running', player.context.state)
@@ -395,10 +347,7 @@
       console.log('tone context running = ', toneContext.state)
       console.log('reverb should be running', reverb.context.state)
     } 
-    // else {
-    //   console.log('reverb should be running', reverb.context.state)
-    //   await Tone.context.resume()
-    // }
+
     console.log('reverb node', reverb)
   }
 
@@ -432,34 +381,31 @@
     toggleReverbStatus()
   }
 
-  function toggleDelay() {
+  async function toggleDelay() {
     if(powerStatus.delayOn) {
       powerStatus.delayOn = false
     } else {
       powerStatus.delayOn = true
     }
 
-    // needs tone.start
     if(!delay || delay['_wasDisposed'] === true) {
+      
+      await Tone.context.resume()
+      powerStatus.toneMicMute = false;
+      if(audioStream) {
+        audioStream.volume.value = 0
+      }
       const options = { debug: true, delayTime: "4n", feedBack: 0.4 };
       delay = new Tone.PingPongDelay(options).toDestination();
       toneMic.connect(delay);
-      console.log("delay", delay, "mic is muted: ", toneMic.mute);
-      if(toneMic.mute) {
-      toneMic.mute = false;
-    }
+      console.log("delay", delay, "mic should muted false: ", toneMic.mute);
     } else {
-      // if(!toneMic.mute) {
-      //   toneMic.mute = true;
-      // }
+      powerStatus.toneMicMute = true;
       delay.disconnect()
       delay.dispose()
       delay = null;
-      console.log("delay", delay, "mic is muted: ", toneMic.mute);
+      console.log("delay", delay, "mic should muted true: ", toneMic.mute);
     }
-
-    console.log("delay after", delay, "mic is muted: ", toneMic.mute);
-    
   }
 
   function toggleChours() {
