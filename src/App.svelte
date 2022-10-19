@@ -91,15 +91,18 @@
       if(toneMic) {
         // toneMic.mute = toggleMuteMic()
         console.log('powerstatus:: mic muted should be true:',powerStatus.toneMicMute)
-        Tone.context.rawContext.suspend(0)
-
+        // if(!toneRecorder) {
+        // }
+        // Tone.context.rawContext.suspend(0)
+        if(!reverb)
+         toneContext.rawContext.suspend()
       }
     } 
     else if(powerStatus.toneMicMute === false) {
       
       if(toneMic) {
         // toneMic.mute = toggleMuteMic()
-        Tone.context.resume()
+       // Tone.context.resume()
 
         console.log('powerstatus:: mic muted should be false', powerStatus.toneMicMute)
       }
@@ -321,6 +324,7 @@
 
   function toggleRecordStatus() {
     recordStatus.isRecording = !recordStatus.isRecording;
+
     if (recordStatus.isRecording) {
       recoredSrc = recordStatus.stop;
       // toneMic.mute = false;
@@ -349,30 +353,30 @@
   }
 
   function toggleReverbStatus() {
-    if(!toneRecorder) {
+   
         if (powerStatus.reverbOn) {
         powerStatus.reverbOn = false;
         powerStatus.toneMicMute = true;
         reverbImgSrc = powerStatus.reverbImgSrcOff;
-        stopReverb()
+        disconnectReverb()
         // reverb = null
         console.log("reverb status on should be false", powerStatus.reverbOn);
       } else {
         powerStatus.reverbOn = true;
         reverbImgSrc = powerStatus.reverbImgSrcOn;
         powerStatus.toneMicMute = false;
-        startReverb()
+        connectReverb()
         console.log("reverb status on should be true", powerStatus.reverbOn);
       }
     }
 
    
-  }
+  
 
-  function createReverb() {
+  
+  async function createReverb() {
     if (!reverb || reverb['_wasDisposed'] === true) {
       console.log('start reverb')
-      // await Tone.context.resume()
       reverb = new Tone.Reverb({
         wet: 1,
         decay: .9,
@@ -384,12 +388,16 @@
   /**
    * Reverb is spilling into recording after reverb is stopped and a new recording begins 
    */
-  async function startReverb() {
+  async function connectReverb() {
+    await Tone.context.resume()
     console.log('...connecting reverb')
-    // toneMic.mute = false
-    toneMic.connect(reverb);
-    Tone.context.resume()
+    // toneMic.connect(reverb);
     if(toneContext.state === 'running') {
+      if(audioStream) {
+      audioStream.volume.value = 0
+    }
+      toneMic.connect(reverb);
+
       console.log('tone context running = ', toneContext.state)
       console.log('reverb should be running', reverb.context.state)
     } 
@@ -400,7 +408,7 @@
     console.log('reverb node', reverb)
   }
 
-  function stopReverb() {
+  function disconnectReverb() {
     /**
      * todo: ture mic on for record if reverb is stopped while recording 
      * need to suspend reverb? 
@@ -411,7 +419,7 @@
     reverb.dispose()
     if(reverb['_wasDisposed'] === true) {
       console.log('reverb was dispposed')
-      reverb.disconnect(toneRecorder)
+      // reverb.disconnect(toneRecorder)
 
     }
     reverb = null
