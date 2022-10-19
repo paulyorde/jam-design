@@ -42,13 +42,18 @@
     distortionOn: false,
     reverbImgSrcOn: "https://icongr.am/jam/power.svg?size=30&color=black",
     reverbImgSrcOff: "https://icongr.am/jam/power.svg?size=30&color=f5f0f0",
-  
+    toneMicMute: true
   };
   let playSrc = playStatus.play;
   let reverbImgSrc = powerStatus.reverbImgSrcOff;
   let delayImgSrc = "https://icongr.am/jam/power.svg?size=30&color=f5f0f0"
   let chorusImgSrc = "https://icongr.am/jam/power.svg?size=30&color=f5f0f0"
   let distortionImgSrc = "https://icongr.am/jam/power.svg?size=30&color=f5f0f0"
+  // let effectStatus = {
+    
+    
+  // };
+
 
   /**
    * NOTES
@@ -76,31 +81,61 @@
 
     }
 
+    /**
+     * only changes when toneMic changes 
+     * should change when any process changes (record, effect, play)
+    */
+    $: if(powerStatus.toneMicMute)  {
+      // let micMuted = true;
+
+      if(toneMic) {
+        // toneMic.mute = toggleMuteMic()
+        console.log('powerstatus:: mic muted should be true:',powerStatus.toneMicMute)
+        Tone.context.rawContext.suspend(0)
+
+      }
+    } 
+    else if(powerStatus.toneMicMute === false) {
+      
+      if(toneMic) {
+        // toneMic.mute = toggleMuteMic()
+        Tone.context.resume()
+
+        console.log('powerstatus:: mic muted should be false', powerStatus.toneMicMute)
+      }
+    }
+
+
+    function toggleMuteMic() {
+      console.log('mute mic called::')
+
+      let micMuted = true;
+      if(recordStatus.isRecording || powerStatus.reverbOn) {
+        micMuted = false;
+        console.log('either recording or reverb should be ON')
+        console.log('mic muted should be false', micMuted)
+        console.log('reverb status', powerStatus.reverbOn)
+      } 
+      else {
+        micMuted = true
+        // toneContext.rawContext.suspend()
+        console.log('either recording or reverb should be OFF')
+        console.log('mic muted should be true', micMuted)
+      }
+      // if(powerStatus.reverbOn) {
+      //   isOn = false
+      // }
+      // if player is playing turn off mic?
+      if(playStatus.isPlaying) {
+        // isOn = true
+      }
+      return micMuted;
+    }
+
     
 
     
   
-  //  $: if(powerStatus.reverbOn) {
-  //   console.log('reverb listener start')
-  //   reverbImgSrc = powerStatus.reverbImgSrcOff;
-  //   /**
-  //    * if toneMic = currently toneMic is not being disposed - so this will be on and will connect reverb
-  //   */
-  //   if(toneMic) {
-  //     toneMic.connect(reverb);
-  //     console.log('reverb listener: on should be true', powerStatus.reverbOn)
-  //   }
-
-  //  } else {
-  //   reverbImgSrc = powerStatus.reverbImgSrcOn
-
-  //   if(toneMic && reverb) {
-  //     toneMic.disconnect(reverb)
-  //     reverb.dispose()
-  //     reverb = null
-  //     console.log('reverb listener on should be false', powerStatus.reverbOn)
-  //   }
-  //  }
 
   async function getMediaDevice() {
     activeCtrls = !activeCtrls
@@ -110,6 +145,8 @@
      * start the Audio Context state = 'running'
     */
     await Tone.start();
+    await Tone.context.resume();
+
 
     if (!toneMic) {
       toneMic = new Tone.UserMedia({volume: -30, mute: true}).toDestination();
@@ -117,21 +154,32 @@
       toneContext = Tone.context;
       audioStream = await toneMic.open();
       console.log("mic", audioStream);
+
       // console.log('chicken or egg')
     }
   }
 
   async function startRecord() {
+    await Tone.context.resume();
+    if(toneContext.state === 'running') {
+      console.log('tone context state::', 'running', toneContext.state)
+    } else {
+      console.log('tone context state::', 'stoppd', toneContext.state)
+    }
+
     if(!toneRecorder) {
       toneRecorder = new Tone.Recorder();
       audioStream.volume.value = 0
       toneMic.connect(toneRecorder);
     }
+    /**
+     * toneRecorder.state = 'started/stopped'
+     * toneRecorder.context.state = 'suspended/running'
+    */
     console.log('recorder started', toneRecorder)
     /**
      * check if context state = 'running/stopped'
     */
-    await Tone.context.resume();
     // if(toneMic.mute) {
     //   toneMic.mute = false
     // }
@@ -176,7 +224,10 @@
      * need to context.resume when start record a second time.
     */
     // Tone.context.dispose();
-    toneContext.rawContext.suspend();
+    // toneContext.rawContext.suspend();
+    toneMic.disconnect(toneRecorder)
+    toneRecorder.dispose()
+    toneRecorder = null;
 
     // if(!toneMic.mute) {
     //   toneMic.mute = true;
@@ -196,7 +247,6 @@
       .then((arrayBuffer) => toneContext.decodeAudioData(arrayBuffer))
       .then(async (audioBuffer) => {
         console.log("blob", audioBuffer);
-        await Tone.context.resume();
 
         /** 
          * todo:
@@ -210,7 +260,17 @@
         //   toneMic.mute = false
         // }
 
+
+        if(toneContext.state === 'running') {
+          console.log('player should be started', player.state)
+          console.log('player should be running', player.context.state)
+        } else {
+          await Tone.context.resume()
+        }
+
         player.start();
+
+        console.log('player', player)
       });
   }
 
@@ -220,7 +280,16 @@
     //     }
     player.stop();
     console.log("stop");
-    // toneContext.rawContext.suspend();
+    toneContext.rawContext.suspend();
+
+    if(player) {
+      console.log('player should be stopped', player.state)
+      console.log('player should be suspended', player.context.state)
+      player.dispose()
+    }
+
+    console.log('player', player)
+
 
   }
 
@@ -254,12 +323,16 @@
     recordStatus.isRecording = !recordStatus.isRecording;
     if (recordStatus.isRecording) {
       recoredSrc = recordStatus.stop;
-      toneMic.mute = false;
+      // toneMic.mute = false;
+      powerStatus.toneMicMute = false
       startRecord();
     } else {
       recoredSrc = recordStatus.record;
       stopRecord();
-      toneMic.mute = true;
+      // toneMic.mute = true;
+      powerStatus.toneMicMute = true
+
+
     }
   }
 
@@ -276,18 +349,24 @@
   }
 
   function toggleReverbStatus() {
-    if (powerStatus.reverbOn) {
-      powerStatus.reverbOn = false;
-      reverbImgSrc = powerStatus.reverbImgSrcOff;
-      stopReverb()
-      // reverb = null
-      console.log("reverb status on should be false", powerStatus.reverbOn);
-    } else {
-      powerStatus.reverbOn = true;
-      reverbImgSrc = powerStatus.reverbImgSrcOn;
-      startReverb()
-      console.log("reverb status on should be true", powerStatus.reverbOn);
+    if(!toneRecorder) {
+        if (powerStatus.reverbOn) {
+        powerStatus.reverbOn = false;
+        powerStatus.toneMicMute = true;
+        reverbImgSrc = powerStatus.reverbImgSrcOff;
+        stopReverb()
+        // reverb = null
+        console.log("reverb status on should be false", powerStatus.reverbOn);
+      } else {
+        powerStatus.reverbOn = true;
+        reverbImgSrc = powerStatus.reverbImgSrcOn;
+        powerStatus.toneMicMute = false;
+        startReverb()
+        console.log("reverb status on should be true", powerStatus.reverbOn);
+      }
     }
+
+   
   }
 
   function createReverb() {
@@ -302,19 +381,38 @@
     }
   }
 
-  function startReverb() {
-      console.log('...connecting reverb')
-      toneMic.mute = false
-      toneMic.connect(reverb);
-      console.log('reverb node', reverb)
+  /**
+   * Reverb is spilling into recording after reverb is stopped and a new recording begins 
+   */
+  async function startReverb() {
+    console.log('...connecting reverb')
+    // toneMic.mute = false
+    toneMic.connect(reverb);
+    Tone.context.resume()
+    if(toneContext.state === 'running') {
+      console.log('tone context running = ', toneContext.state)
+      console.log('reverb should be running', reverb.context.state)
+    } 
+    // else {
+    //   console.log('reverb should be running', reverb.context.state)
+    //   await Tone.context.resume()
+    // }
+    console.log('reverb node', reverb)
   }
 
   function stopReverb() {
-    toneMic.mute = true;
+    /**
+     * todo: ture mic on for record if reverb is stopped while recording 
+     * need to suspend reverb? 
+     * unmute mic
+     */
+    // toneMic.mute = true;
     toneMic.disconnect(reverb)
     reverb.dispose()
     if(reverb['_wasDisposed'] === true) {
       console.log('reverb was dispposed')
+      reverb.disconnect(toneRecorder)
+
     }
     reverb = null
 
@@ -422,132 +520,134 @@
 </script>
 
 
-<main>
-  <!-- Top Bar -->
-  <Container>
-    <Row style="color: #6babff; font-size: x-large; height:200px; font-family: fantasy;margin-top:10px;">
-      <Col size="6">
-        <!-- Logo -->
-        <div
-          style="display: flex;
-          align-items: center;"
-        >
-          <!-- <h6>Song Pad</h6> -->
-          <!-- svelte-ignore a11y-missing-attribute -->
-          <!-- https://icongr.am/jam/station.svg?size=26&color=acc0d3 -->
-          <button style="background: #ffffff !important; max-width: initial !important; display: flex !important; align-items: center !important; color: rgb(107, 171, 255);" on:click={getMediaDevice}>
+<Container>
+  <main>
+    <!-- Top Bar -->
+    <Container>
+      <Row style="color: #6babff; font-size: x-large; height:200px; font-family: fantasy;margin-top:10px;">
+        <Col size="6">
+          <!-- Logo -->
+          <div
+            style="display: flex;
+            align-items: center;"
+          >
+            <!-- <h6>Song Pad</h6> -->
             <!-- svelte-ignore a11y-missing-attribute -->
-            Song Pad
-            <img src="public\icons8-radio-tower-48.png" />
-          </button>
-          <!-- <img src="public\icons8-radio-tower-48.png" /> -->
-        </div>
-      </Col>
-      <!-- Start Mic -->
-      <!-- {#if !activeRadio} -->
-      <Container>
-        <Row style="margin-bottom: 20px">
-          <Col size="5"></Col>
-          <!-- <button style="background: #ffffff !important;" on:click={getMediaDevice} class:activeRadio transition:fade>
-            <!-- svelte-ignore a11y-missing-attribute -->
-            <!-- <img src="public\icons8-radio-tower-48.png" />
-          </button> -->
-        </Row>
-      </Container>
-      <!-- {/if} -->
-    </Row>
-  </Container>
-
-  <!-- Main Controls -->
-  {#if !activeCtrls}
-  <Container>
-    <Row style="margin-bottom:10px">
-      <Col size="5"></Col>
-      <div class:activeCtrls transition:fade>
-        <div class="app-ctrls--main">
-          <!-- Record -->
-          <!-- svelte-ignore a11y-missing-attribute -->
-          <button on:click={toggleRecordStatus}>
-            <img src={recoredSrc} />
-          </button>
+            <!-- https://icongr.am/jam/station.svg?size=26&color=acc0d3 -->
+            <button style="background: #ffffff !important; max-width: initial !important; display: flex !important; align-items: center !important; color: rgb(107, 171, 255);" on:click={getMediaDevice}>
+              <!-- svelte-ignore a11y-missing-attribute -->
+              Song Pad
+              <img src="public\icons8-radio-tower-48.png" />
+            </button>
+            <!-- <img src="public\icons8-radio-tower-48.png" /> -->
+          </div>
+        </Col>
+        <!-- Start Mic -->
+        <!-- {#if !activeRadio} -->
+        <Container>
+          <Row style="margin-bottom: 20px">
+            <Col size="5"></Col>
+            <!-- <button style="background: #ffffff !important;" on:click={getMediaDevice} class:activeRadio transition:fade>
+              <!-- svelte-ignore a11y-missing-attribute -->
+              <!-- <img src="public\icons8-radio-tower-48.png" />
+            </button> -->
+          </Row>
+        </Container>
+        <!-- {/if} -->
+      </Row>
+    </Container>
   
-          <!-- Play -->
-          <!-- svelte-ignore a11y-missing-attribute -->
-          <button on:click={togglePlayStatus}>
-            <img src={playSrc} />
-          </button>
-        </div>
-      </div>
-    </Row>
-
-    <Row>
-      <Col size="5"></Col>
-      <div class:activeCtrls>
-        <div class="app-ctrls--main">
-          <!-- Open Effects -->
-          <!-- svelte-ignore a11y-missing-attribute -->
-          <button on:click={(_) => (active = !active)}>
-            <img
-              src="https://icongr.am/entypo/sound-mix.svg?size=45&color=f5f0f0"
-            />
-          </button>
-          <!-- Save -->
-          <!-- svelte-ignore a11y-missing-attribute -->
-          <button on:click={download}>
-            <img
-              src="https://icongr.am/feather/download-cloud.svg?size=45&color=f5f0f0"
-            />
-          </button>
-        </div>
-      </div>
-    </Row>
-  </Container>
-  {/if}
-
-  <!-- Effects -->
-  {#if !active}
-  <Container>
-    <div class:active style="margin-top: 10px;" transition:fade>
-      <Row style="margin-bottom: 10px;">
+    <!-- Main Controls -->
+    {#if !activeCtrls}
+    <Container>
+      <Row style="margin-bottom:10px">
         <Col size="5"></Col>
-        <!-- Reverb Delay-->
-        <div class="app-ctrls--main">
-          <!-- svelte-ignore a11y-missing-attribute -->
-          <button on:click={toggleReverb}>
-            <img src={reverbImgSrc} title="Turn Reverb On/Off" />
-            <h6 class="modal-ctrls--effects">Reverb</h6>
-          </button>
-
-          <button on:click={toggleDelay}>
+        <div class:activeCtrls transition:fade>
+          <div class="app-ctrls--main">
+            <!-- Record -->
             <!-- svelte-ignore a11y-missing-attribute -->
-            <img src={delayImgSrc} />
-            <h6 class="modal-ctrls--effects">Delay</h6>
-          </button>
+            <button on:click={toggleRecordStatus}>
+              <img src={recoredSrc} />
+            </button>
+    
+            <!-- Play -->
+            <!-- svelte-ignore a11y-missing-attribute -->
+            <button on:click={togglePlayStatus}>
+              <img src={playSrc} />
+            </button>
+          </div>
         </div>
       </Row>
-
+  
       <Row>
         <Col size="5"></Col>
-        <!-- Chorus Distortion -->
-        <div class="app-ctrls--main">
-          <button on:click={toggleChours}>
+        <div class:activeCtrls>
+          <div class="app-ctrls--main">
+            <!-- Open Effects -->
             <!-- svelte-ignore a11y-missing-attribute -->
-            <img src={chorusImgSrc} />
-            <h6 class="modal-ctrls--effects">Chorus</h6>
-          </button>
-
-          <button on:click={toggleDistortion}>
+            <button on:click={(_) => (active = !active)}>
+              <img
+                src="https://icongr.am/entypo/sound-mix.svg?size=45&color=f5f0f0"
+              />
+            </button>
+            <!-- Save -->
             <!-- svelte-ignore a11y-missing-attribute -->
-            <img src={distortionImgSrc} />
-            <h6 class="modal-ctrls--effects">Dirt</h6>
-          </button>
+            <button on:click={download}>
+              <img
+                src="https://icongr.am/feather/download-cloud.svg?size=45&color=f5f0f0"
+              />
+            </button>
+          </div>
         </div>
       </Row>
-    </div>
-  </Container>
-  {/if}
-
-</main>
+    </Container>
+    {/if}
+  
+    <!-- Effects -->
+    {#if !active}
+    <Container>
+      <div class:active style="margin-top: 10px;" transition:fade>
+        <Row style="margin-bottom: 10px;">
+          <Col size="5"></Col>
+          <!-- Reverb Delay-->
+          <div class="app-ctrls--main">
+            <!-- svelte-ignore a11y-missing-attribute -->
+            <button on:click={toggleReverb}>
+              <img src={reverbImgSrc} title="Turn Reverb On/Off" />
+              <h6 class="modal-ctrls--effects">Reverb</h6>
+            </button>
+  
+            <button on:click={toggleDelay}>
+              <!-- svelte-ignore a11y-missing-attribute -->
+              <img src={delayImgSrc} />
+              <h6 class="modal-ctrls--effects">Delay</h6>
+            </button>
+          </div>
+        </Row>
+  
+        <Row>
+          <Col size="5"></Col>
+          <!-- Chorus Distortion -->
+          <div class="app-ctrls--main">
+            <button on:click={toggleChours}>
+              <!-- svelte-ignore a11y-missing-attribute -->
+              <img src={chorusImgSrc} />
+              <h6 class="modal-ctrls--effects">Chorus</h6>
+            </button>
+  
+            <button on:click={toggleDistortion}>
+              <!-- svelte-ignore a11y-missing-attribute -->
+              <img src={distortionImgSrc} />
+              <h6 class="modal-ctrls--effects">Dirt</h6>
+            </button>
+          </div>
+        </Row>
+      </div>
+    </Container>
+    {/if}
+  
+  </main>
+</Container>
 
 
 <style>
