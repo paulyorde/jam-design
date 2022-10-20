@@ -26,29 +26,44 @@
   let recordStatus = {
     isRecording: false,
     record: "https://icongr.am/jam/mic-f.svg?size=45&color=f5f0f0",
-    stop: "https://icongr.am/jam/stop.svg?size=45&color=f5f0f0",
+    stop: "https://icongr.am/jam/mic-f.svg?size=45&color=e2ef0b",
+    // stop: "https://icongr.am/jam/stop.svg?size=45&color=e2ef0b",
   };
   let recoredSrc = recordStatus.record;
   let playStatus = {
     isPlaying: false,
     play: "https://icongr.am/clarity/play.svg?size=45&color=f5f0f0",
-    stop: "https://icongr.am/jam/stop.svg?size=45&color=f5f0f0",
+    stop: "https://icongr.am/clarity/play.svg?size=45&color=e2ef0b",
+    // stop: "https://icongr.am/jam/stop.svg?size=45&color=f5f0f0",
   };
   let powerStatus = {
     micOn: false,
     reverbOn: false,
-    delayOn: false,
-    chorusOn: false,
-    distortionOn: false,
-    reverbImgSrcOn: "https://icongr.am/jam/power.svg?size=30&color=black",
+    reverbImgSrcOn: "https://icongr.am/jam/power.svg?size=30&color=e2ef0b",
     reverbImgSrcOff: "https://icongr.am/jam/power.svg?size=30&color=f5f0f0",
     toneMicMute: true
   };
+  let delayStatus = {
+    delayOn: false,
+    delayImgSrcOn: "https://icongr.am/jam/power.svg?size=30&color=e2ef0b",
+    delayImgSrcOff: "https://icongr.am/jam/power.svg?size=30&color=f5f0f0",
+    delayImgSrc: "https://icongr.am/jam/power.svg?size=30&color=f5f0f0"
+  }
+  let chorusStatus = { 
+    chorusOn: false,
+    chorusImgSrcOn: "https://icongr.am/jam/power.svg?size=30&color=e2ef0b",
+    chorusImgSrcOff: "https://icongr.am/jam/power.svg?size=30&color=f5f0f0",
+    chorusImgSrc: "https://icongr.am/jam/power.svg?size=30&color=f5f0f0"
+  }
+
+  let dirtStatus = {
+    dirtOn: false,
+    dirtImgSrcOn: "https://icongr.am/jam/power.svg?size=30&color=e2ef0b",
+    dirtImgSrcOff: "https://icongr.am/jam/power.svg?size=30&color=f5f0f0",
+    dirtImgSrc: "https://icongr.am/jam/power.svg?size=30&color=f5f0f0"
+  }
   let playSrc = playStatus.play;
   let reverbImgSrc = powerStatus.reverbImgSrcOff;
-  let delayImgSrc = "https://icongr.am/jam/power.svg?size=30&color=f5f0f0"
-  let chorusImgSrc = "https://icongr.am/jam/power.svg?size=30&color=f5f0f0"
-  let distortionImgSrc = "https://icongr.am/jam/power.svg?size=30&color=f5f0f0"
   // let effectStatus = {
     
     
@@ -92,7 +107,7 @@
     if(toneMic) {
       console.log('powerstatus:: mic muted should be true:',powerStatus.toneMicMute)
 
-      if((!powerStatus.reverbOn && !recordStatus.isRecording && !powerStatus.delayOn) ) {
+      if((!powerStatus.reverbOn && !recordStatus.isRecording && !delayStatus.delayOn) ) {
         toneContext.rawContext.suspend()
       }
     }
@@ -382,10 +397,12 @@
   }
 
   async function toggleDelay() {
-    if(powerStatus.delayOn) {
-      powerStatus.delayOn = false
+    if(delayStatus.delayOn) {
+      delayStatus.delayOn = false
+      delayStatus.delayImgSrc = delayStatus.delayImgSrcOff;
     } else {
-      powerStatus.delayOn = true
+      delayStatus.delayImgSrc = delayStatus.delayImgSrcOn;
+      delayStatus.delayOn = true
     }
 
     if(!delay || delay['_wasDisposed'] === true) {
@@ -409,10 +426,12 @@
   }
 
   function toggleChours() {
-    if(powerStatus.chorusOn) {
-      powerStatus.chorusOn = false
+    if(chorusStatus.chorusOn) {
+      chorusStatus.chorusOn = false
+      chorusStatus.chorusImgSrc = chorusStatus.chorusImgSrcOff;
     } else {
-      powerStatus.chorusOn = true
+      chorusStatus.chorusImgSrc = chorusStatus.chorusImgSrcOn;
+      chorusStatus.chorusOn = true
     }
 
     if(!chorus || chorus['_wasDisposed'] === true) {
@@ -440,10 +459,12 @@
    * todo: research options overtone , input:gain, wet/dry to fix latency
    */
   function toggleDistortion() {
-    if(powerStatus.distortionOn) {
-      powerStatus.distortionOn = false
+    if(dirtStatus.dirtOn) {
+      dirtStatus.dirtOn = false
+      dirtStatus.dirtImgSrc = dirtStatus.dirtImgSrcOff;
     } else {
-      powerStatus.distortionOn = true
+      dirtStatus.dirtImgSrc = dirtStatus.dirtImgSrcOn;
+      dirtStatus.dirtOn = true
     }
 
     if(!dirt || dirt['_wasDisposed'] === true) {
@@ -508,11 +529,12 @@
             <!-- <h6>Song Pad</h6> -->
             <!-- svelte-ignore a11y-missing-attribute -->
             <!-- https://icongr.am/jam/station.svg?size=26&color=acc0d3 -->
-            <button style="background: #ffffff !important; max-width: initial !important; display: flex !important; align-items: center !important; color: rgb(107, 171, 255);" on:click={getMediaDevice}>
+            <button style="background: #ffffff !important; max-width: initial !important; display: flex !important; align-items: center !important; color: rgb(107, 171, 255);">
               <!-- svelte-ignore a11y-missing-attribute -->
               Song Pad
               <img src="public\icons8-radio-tower-48.png" />
             </button>
+            <button on:click={getMediaDevice}>start</button>
             <!-- <img src="public\icons8-radio-tower-48.png" /> -->
           </div>
         </Col>
@@ -521,23 +543,19 @@
         <Container>
           <Row style="margin-bottom: 20px">
             <Col size="5"></Col>
-            <!-- <button style="background: #ffffff !important;" on:click={getMediaDevice} class:activeRadio transition:fade>
-              <!-- svelte-ignore a11y-missing-attribute -->
-              <!-- <img src="public\icons8-radio-tower-48.png" />
-            </button> -->
           </Row>
         </Container>
         <!-- {/if} -->
       </Row>
     </Container>
   
-    <!-- Main Controls -->
-    {#if !activeCtrls}
+    <div class="fox">
+      <!-- Main Controls -->
     <Container>
-      <Row style="margin-bottom:10px">
+      <Row>
+      <!-- <Row style="margin-bottom:10px;"> -->
         <Col size="5"></Col>
-        <div class:activeCtrls transition:fade>
-          <div class="app-ctrls--main">
+          <div class="app-ctrls--main space">
             <!-- Record -->
             <!-- svelte-ignore a11y-missing-attribute -->
             <button on:click={toggleRecordStatus}>
@@ -550,13 +568,11 @@
               <img src={playSrc} />
             </button>
           </div>
-        </div>
       </Row>
   
       <Row>
         <Col size="5"></Col>
-        <div class:activeCtrls>
-          <div class="app-ctrls--main">
+          <div class="app-ctrls--main space">
             <!-- Open Effects -->
             <!-- svelte-ignore a11y-missing-attribute -->
             <button on:click={(_) => (active = !active)}>
@@ -572,19 +588,19 @@
               />
             </button>
           </div>
-        </div>
       </Row>
     </Container>
-    {/if}
   
     <!-- Effects -->
     {#if !active}
     <Container>
-      <div class:active style="margin-top: 10px;" transition:fade>
-        <Row style="margin-bottom: 10px;">
+      <div class:active transition:fade>
+      <!-- <div class:active style="margin-top: 10px;" transition:fade> -->
+        <!-- <Row style="margin-bottom: 10px;"> -->
+        <Row>
           <Col size="5"></Col>
           <!-- Reverb Delay-->
-          <div class="app-ctrls--main">
+          <div class="app-ctrls--main space">
             <!-- svelte-ignore a11y-missing-attribute -->
             <button on:click={toggleReverb}>
               <img src={reverbImgSrc} title="Turn Reverb On/Off" />
@@ -593,7 +609,7 @@
   
             <button on:click={toggleDelay}>
               <!-- svelte-ignore a11y-missing-attribute -->
-              <img src={delayImgSrc} />
+              <img src={delayStatus.delayImgSrc} />
               <h6 class="modal-ctrls--effects">Delay</h6>
             </button>
           </div>
@@ -605,13 +621,13 @@
           <div class="app-ctrls--main">
             <button on:click={toggleChours}>
               <!-- svelte-ignore a11y-missing-attribute -->
-              <img src={chorusImgSrc} />
+              <img src={chorusStatus.chorusImgSrc} />
               <h6 class="modal-ctrls--effects">Chorus</h6>
             </button>
   
             <button on:click={toggleDistortion}>
               <!-- svelte-ignore a11y-missing-attribute -->
-              <img src={distortionImgSrc} />
+              <img src={dirtStatus.dirtImgSrc} />
               <h6 class="modal-ctrls--effects">Dirt</h6>
             </button>
           </div>
@@ -619,12 +635,25 @@
       </div>
     </Container>
     {/if}
+    </div>
   
   </main>
 </Container>
 
 
 <style>
+  @media screen and (max-width: 599px) {
+    .fox {
+      margin-left: 25%;
+      /* margin-bottom: 10px !important; */
+    }
+  }
+
+  @media screen and (  max-width: 900px) {
+    .space {
+      margin-bottom: 5px !important;
+    }
+  }
   .active {
     display: none;
   }
