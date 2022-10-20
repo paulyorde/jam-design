@@ -109,7 +109,7 @@
     if(toneMic) {
       console.log('powerstatus:: mic muted should be true:',powerStatus.toneMicMute)
 
-      if((!reverbStatus.reverbOn && !recordStatus.isRecording && !delayStatus.delayOn) ) {
+      if((!reverbStatus.reverbOn && !recordStatus.isRecording && !delayStatus.delayOn && !chorusStatus.chorusOn && !dirtStatus.dirtOn) ) {
         toneContext.rawContext.suspend()
       }
     }
@@ -314,29 +314,23 @@
   }
 
   function toggleReverbStatus() {
-   
-        if (reverbStatus.reverbOn) {
-          reverbStatus.reverbOn = false;
-          powerStatus.toneMicMute = true;
-          reverbStatus.reverbImgSrc = reverbStatus.reverbImgSrcOff;
-        disconnectReverb()
-        // reverb = null
-        console.log("reverb status on should be false", reverbStatus.reverbOn);
-      } else {
-        reverbStatus.reverbOn = true;
-        reverbStatus.reverbImgSrc = reverbStatus.reverbImgSrcOn;
-        powerStatus.toneMicMute = false;
-        connectReverb()
-        console.log("reverb status on should be true", reverbStatus.reverbOn);
-      }
+    if (reverbStatus.reverbOn) {
+      reverbStatus.reverbOn = false;
+      powerStatus.toneMicMute = true;
+      reverbStatus.reverbImgSrc = reverbStatus.reverbImgSrcOff;
+      disconnectReverb()
+      // reverb = null
+      console.log("reverb status on should be false", reverbStatus.reverbOn);
+    } else {
+      reverbStatus.reverbOn = true;
+      reverbStatus.reverbImgSrc = reverbStatus.reverbImgSrcOn;
+      powerStatus.toneMicMute = false;
+      connectReverb()
+      console.log("reverb status on should be true", reverbStatus.reverbOn);
     }
+  }
 
-   
-  
-
-  
-  
-    async function createReverb() {
+  async function createReverb() {
     if (!reverb || reverb['_wasDisposed'] === true) {
       console.log('start reverb')
       reverb = new Tone.Reverb({
@@ -402,9 +396,11 @@
     if(delayStatus.delayOn) {
       delayStatus.delayOn = false
       delayStatus.delayImgSrc = delayStatus.delayImgSrcOff;
+      powerStatus.toneMicMute = true;
     } else {
       delayStatus.delayImgSrc = delayStatus.delayImgSrcOn;
       delayStatus.delayOn = true
+      powerStatus.toneMicMute = false;
     }
 
     if(!delay || delay['_wasDisposed'] === true) {
@@ -427,23 +423,30 @@
     }
   }
 
-  function toggleChours() {
+  async function toggleChours() {
     if(chorusStatus.chorusOn) {
       chorusStatus.chorusOn = false
       chorusStatus.chorusImgSrc = chorusStatus.chorusImgSrcOff;
+      powerStatus.toneMicMute = true;
     } else {
       chorusStatus.chorusImgSrc = chorusStatus.chorusImgSrcOn;
       chorusStatus.chorusOn = true
+      powerStatus.toneMicMute = false;
     }
 
     if(!chorus || chorus['_wasDisposed'] === true) {
       chorus = new Tone.Chorus(2, .1, 1).toDestination();
+      await Tone.context.resume()
+      console.log('...connecting chorus')
+      // toneMic.connect(reverb);
+      if(toneContext.state === 'running') {
+        if(audioStream) {
+          audioStream.volume.value = 0
+        }
+      }
       toneMic.connect(chorus);
       console.log("chours", chorus);
-      
-      if(toneMic.mute) {
-        toneMic.mute = false;
-      }
+
     } else {
       // if(!toneMic.mute) {
       //   toneMic.mute = true;
@@ -460,17 +463,28 @@
    * https://tonejs.github.io/docs/14.7.77/Distortion
    * todo: research options overtone , input:gain, wet/dry to fix latency
    */
-  function toggleDistortion() {
+  async function toggleDirt() {
     if(dirtStatus.dirtOn) {
       dirtStatus.dirtOn = false
       dirtStatus.dirtImgSrc = dirtStatus.dirtImgSrcOff;
+      powerStatus.toneMicMute = true;
     } else {
       dirtStatus.dirtImgSrc = dirtStatus.dirtImgSrcOn;
       dirtStatus.dirtOn = true
+      powerStatus.toneMicMute = false;
     }
 
     if(!dirt || dirt['_wasDisposed'] === true) {
       dirt = new Tone.Distortion(1).toDestination();
+
+      await Tone.context.resume()
+      console.log('...connecting dirt')
+      // toneMic.connect(reverb);
+      if(toneContext.state === 'running') {
+        if(audioStream) {
+          audioStream.volume.value = 0
+        }
+      }
       toneMic.connect(dirt);
       console.log('distortion', dirt)
       if(toneMic.mute) {
@@ -627,7 +641,7 @@
               <h6 class="modal-ctrls--effects">Chorus</h6>
             </button>
   
-            <button on:click={toggleDistortion}>
+            <button on:click={toggleDirt}>
               <!-- svelte-ignore a11y-missing-attribute -->
               <img src={dirtStatus.dirtImgSrc} />
               <h6 class="modal-ctrls--effects">Dirt</h6>
