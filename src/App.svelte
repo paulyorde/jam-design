@@ -32,9 +32,9 @@
   let recoredSrc = recordStatus.record;
   let playStatus = {
     isPlaying: false,
-    play: "https://icongr.am/clarity/play.svg?size=45&color=f5f0f0",
-    stop: "https://icongr.am/clarity/play.svg?size=45&color=e2ef0b",
-    // stop: "https://icongr.am/jam/stop.svg?size=45&color=f5f0f0",
+    playImgSrcOn:  "https://icongr.am/clarity/play.svg?size=45&color=e2ef0b",
+    playImgSrcOff: "https://icongr.am/clarity/play.svg?size=45&color=f5f0f0",
+    playImgSrc:    "https://icongr.am/clarity/play.svg?size=45&color=f5f0f0"
   };
   let powerStatus = {
     micOn: false,
@@ -65,7 +65,6 @@
     dirtImgSrcOff: "https://icongr.am/jam/power.svg?size=30&color=f5f0f0",
     dirtImgSrc: "https://icongr.am/jam/power.svg?size=30&color=f5f0f0"
   }
-  let playSrc = playStatus.play;
   // let effectStatus = {
     
     
@@ -149,10 +148,10 @@
     playStatus.isPlaying = !playStatus.isPlaying;
 
     if (playStatus.isPlaying) {
-      playSrc = playStatus.stop;
+      playStatus.playImgSrc = playStatus.playImgSrcOn;
       play();
     } else {
-      playSrc = playStatus.play;
+      playStatus.playImgSrc = playStatus.playImgSrcOff;
       stop();
     }
   }
@@ -448,10 +447,6 @@
       console.log("chours", chorus);
 
     } else {
-      // if(!toneMic.mute) {
-      //   toneMic.mute = true;
-      // }
-
       chorus.disconnect()
       chorus.dispose()
       chorus = null;
@@ -479,7 +474,6 @@
 
       await Tone.context.resume()
       console.log('...connecting dirt')
-      // toneMic.connect(reverb);
       if(toneContext.state === 'running') {
         if(audioStream) {
           audioStream.volume.value = 0
@@ -487,14 +481,7 @@
       }
       toneMic.connect(dirt);
       console.log('distortion', dirt)
-      if(toneMic.mute) {
-       toneMic.mute = false;
-      }
     } else {
-      // if(!toneMic.mute) {
-      //   toneMic.mute = true;
-      // }
-
       dirt.disconnect()
       dirt.dispose()
       dirt = null;
@@ -581,7 +568,7 @@
             <!-- Play -->
             <!-- svelte-ignore a11y-missing-attribute -->
             <button on:click={togglePlayStatus}>
-              <img src={playSrc} />
+              <img src={playStatus.playImgSrc} />
             </button>
           </div>
       </Row>
