@@ -144,6 +144,11 @@
     }
   }
 
+  /**
+   * todo 
+   * don't switch imgSrc if no audio 
+   * user message - no audio 
+   */
   function togglePlayStatus() {
     playStatus.isPlaying = !playStatus.isPlaying;
 
@@ -157,8 +162,8 @@
   }
 
   async function play() {
-    
-    toneRecordBlob
+   if(toneRecordBlob) {
+      toneRecordBlob
       .arrayBuffer()
       // decode is expensive - does tone make it faster - can this passed to worker
       .then((arrayBuffer) => toneContext.decodeAudioData(arrayBuffer))
@@ -173,15 +178,7 @@
         // if(!player) {
         player = new Tone.Player({ url: audioBuffer }).toDestination();
         // }
-        // if(toneMic.mute) {
-        //   toneMic.mute = false
-        // }
-
-
-        /**
-         * state should be suspened from record/effect toggles
-         * needs to resume to play
-        */
+ 
         if(toneContext.state === 'running') {
           console.log('player should be started', player.state)
           console.log('player should be running', player.context.state)
@@ -189,10 +186,17 @@
           await Tone.context.resume()
         }
 
-        player.start();
+        if(audioBuffer) {
+
+          player.start();
+        } 
+        
 
         console.log('player', player)
       });
+    } else {
+          console.log('no audio')
+        }
   }
 
   function stop() {
