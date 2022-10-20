@@ -518,6 +518,12 @@
 </script>
 
 
+<!-- todo 
+  ** setup responsive 
+* create one container/wrapper
+* move buttons to seperate columns
+-->
+
 <Container>
   <main>
     <!-- Top Bar -->
@@ -645,20 +651,25 @@
 
 
 <style>
-  @media screen and (max-width: 599px) {
-    .fox {
-      margin-left: 25%;
-      /* margin-bottom: 10px !important; */
-    }
-  }
 
-  @media screen and (  max-width: 900px) {
+
+
+  @media screen and (  max-width: 1200px) and (min-width: 599px) {
     .space {
-      margin-bottom: 5px !important;
+      margin-bottom: 5px;
     }
   }
   .active {
     display: none;
+  }
+
+  @media screen and (max-width: 598px) {
+    .fox {
+      margin-left: 25%;
+    }
+    .space {
+      margin-bottom: 0px !important;
+    }
   }
 
   .activeRadio {
@@ -676,6 +687,7 @@
   }
   .app-ctrls--main {
     padding-right: 10px;
+    /* dmargin-bottom: 5px !important; */
   }
 
   .activeCtrls {
@@ -718,7 +730,7 @@
     --color-error: #5a86c1;
     --color-success: #5a86c1;
     --grid-maxWidth: 120rem;
-    --grid-gutter: 2rem;
+    --grid-gutter: 1rem;
     --font-size: 1.6rem;
     --font-color: #333333;
     --font-family-sans: sans-serif;
