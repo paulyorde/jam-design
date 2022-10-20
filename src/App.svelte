@@ -38,11 +38,14 @@
   };
   let powerStatus = {
     micOn: false,
+    toneMicMute: true
+  };
+  let reverbStatus = {
     reverbOn: false,
     reverbImgSrcOn: "https://icongr.am/jam/power.svg?size=30&color=e2ef0b",
     reverbImgSrcOff: "https://icongr.am/jam/power.svg?size=30&color=f5f0f0",
-    toneMicMute: true
-  };
+    reverbImgSrc: "https://icongr.am/jam/power.svg?size=30&color=f5f0f0"
+  }
   let delayStatus = {
     delayOn: false,
     delayImgSrcOn: "https://icongr.am/jam/power.svg?size=30&color=e2ef0b",
@@ -63,7 +66,6 @@
     dirtImgSrc: "https://icongr.am/jam/power.svg?size=30&color=f5f0f0"
   }
   let playSrc = playStatus.play;
-  let reverbImgSrc = powerStatus.reverbImgSrcOff;
   // let effectStatus = {
     
     
@@ -107,7 +109,7 @@
     if(toneMic) {
       console.log('powerstatus:: mic muted should be true:',powerStatus.toneMicMute)
 
-      if((!powerStatus.reverbOn && !recordStatus.isRecording && !delayStatus.delayOn) ) {
+      if((!reverbStatus.reverbOn && !recordStatus.isRecording && !delayStatus.delayOn) ) {
         toneContext.rawContext.suspend()
       }
     }
@@ -313,19 +315,19 @@
 
   function toggleReverbStatus() {
    
-        if (powerStatus.reverbOn) {
-        powerStatus.reverbOn = false;
-        powerStatus.toneMicMute = true;
-        reverbImgSrc = powerStatus.reverbImgSrcOff;
+        if (reverbStatus.reverbOn) {
+          reverbStatus.reverbOn = false;
+          powerStatus.toneMicMute = true;
+          reverbStatus.reverbImgSrc = reverbStatus.reverbImgSrcOff;
         disconnectReverb()
         // reverb = null
-        console.log("reverb status on should be false", powerStatus.reverbOn);
+        console.log("reverb status on should be false", reverbStatus.reverbOn);
       } else {
-        powerStatus.reverbOn = true;
-        reverbImgSrc = powerStatus.reverbImgSrcOn;
+        reverbStatus.reverbOn = true;
+        reverbStatus.reverbImgSrc = reverbStatus.reverbImgSrcOn;
         powerStatus.toneMicMute = false;
         connectReverb()
-        console.log("reverb status on should be true", powerStatus.reverbOn);
+        console.log("reverb status on should be true", reverbStatus.reverbOn);
       }
     }
 
@@ -603,7 +605,7 @@
           <div class="app-ctrls--main space">
             <!-- svelte-ignore a11y-missing-attribute -->
             <button on:click={toggleReverb}>
-              <img src={reverbImgSrc} title="Turn Reverb On/Off" />
+              <img src={reverbStatus.reverbImgSrc} title="Turn Reverb On/Off" />
               <h6 class="modal-ctrls--effects">Reverb</h6>
             </button>
   
