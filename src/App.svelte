@@ -9,6 +9,7 @@
   import * as Tone from "tone";
   import { saveAs } from "file-saver";
   import * as encoder from "audio-encoder";
+    import { Oscillator } from 'tone';
 
   let toneRecorder = null;
   let toneMic;
@@ -97,7 +98,9 @@
      * if suspended -> await Tone.context.resume();
     */
   $: if(powerStatus.micOn) {
-    console.log('state', toneContext.state)
+    console.log('powerstatus tonecontext state', toneContext.state)
+    console.log('powerstatus tonecontext state', toneContext)
+    console.log('powerstatus micon', powerStatus.micOn)
 
   }
 
@@ -108,7 +111,7 @@
     if(toneMic) {
       console.log('powerstatus:: mic muted should be true:',powerStatus.toneMicMute)
 
-      if((!reverbStatus.reverbOn && !recordStatus.isRecording && !delayStatus.delayOn && !chorusStatus.chorusOn && !dirtStatus.dirtOn) ) {
+      if((!reverbStatus.reverbOn && !recordStatus.isRecording && !delayStatus.delayOn && !chorusStatus.chorusOn && !dirtStatus.dirtOn && !playStatus.isPlaying) ) {
         toneContext.rawContext.suspend()
       }
     }
@@ -120,6 +123,41 @@
     if(toneMic) {
       console.log('powerstatus:: mic muted should be false', powerStatus.toneMicMute)
     }
+  }
+
+  /**
+   * Distortion BitCrusher -WaveShaper 
+   * this effect will shape current audio with distortion
+   */
+  function createWaveShaperDistorion() {
+    console.log('tone context :::_context', Tone.context)
+    let ctx = new AudioContext()
+    let oscillator1 = new OscillatorNode(ctx);
+    let bitCrusher = new WaveShaperNode(ctx)
+    // oscillator1.connect(bitCrusher).connect(ctx.destination)
+    toneMic.connect(bitCrusher)
+
+    // start oscillator1
+    oscillator1.start()
+    // change input parameter w/ slider
+
+    // create samples, curve, levels
+    let x;
+    let n;
+    let y;
+    let nSamples = 65536;
+    let curve = new Float32Array(nSamples);
+    let nLevels = Math.pow(2, 3);
+    for(n=0; n < nSamples; ++n) {
+      x = nLevels/nSamples
+      y = Math.floor(x)
+      curve[n] = (2*y+1)/nLevels-1
+    }
+    // generate curve values
+
+    // asign curve values to bitchrusher curve
+    bitCrusher.curve = curve
+
   }
 
   async function getMediaDevice() {
@@ -150,53 +188,57 @@
    * user message - no audio 
    */
   function togglePlayStatus() {
-    playStatus.isPlaying = !playStatus.isPlaying;
-
-    if (playStatus.isPlaying) {
-      playStatus.playImgSrc = playStatus.playImgSrcOn;
-      play();
-    } else {
-      playStatus.playImgSrc = playStatus.playImgSrcOff;
-      stop();
+    
+    if (toneRecordBlob) {
+      playStatus.isPlaying = !playStatus.isPlaying;
+      if (playStatus.isPlaying) {
+        playStatus.playImgSrc = playStatus.playImgSrcOn;
+        powerStatus.toneMicMute = false
+        play();
+      } 
+      else {
+        playStatus.playImgSrc = playStatus.playImgSrcOff;
+        stop();
+      }
+    }
+    else {
+      console.log('no audio')
     }
   }
 
   async function play() {
-   if(toneRecordBlob) {
-      toneRecordBlob
-      .arrayBuffer()
-      // decode is expensive - does tone make it faster - can this passed to worker
-      .then((arrayBuffer) => toneContext.decodeAudioData(arrayBuffer))
-      .then(async (audioBuffer) => {
-        console.log("blob", audioBuffer);
+    toneRecordBlob
+    .arrayBuffer()
+    // decode is expensive - does tone make it faster - can this passed to worker
+    .then((arrayBuffer) => toneContext.decodeAudioData(arrayBuffer))
+    .then(async (audioBuffer) => {
+      console.log("blob", audioBuffer);
 
-        /** 
-         * todo:
-         * only needs one player
-         * needs the new url of next recording
-        */
-        // if(!player) {
-        player = new Tone.Player({ url: audioBuffer }).toDestination();
-        // }
- 
-        if(toneContext.state === 'running') {
-          console.log('player should be started', player.state)
-          console.log('player should be running', player.context.state)
-        } else {
-          await Tone.context.resume()
+      /** 
+       * todo:
+       * only needs one player
+       * needs the new url of next recording
+      */
+      // if(!player) {
+      player = new Tone.Player({ url: audioBuffer }).toDestination();
+      // }
+
+      if(toneContext.state === 'running') {
+        console.log('player should be started', player.state)
+        console.log('player should be running', player.context.state)
+      } else {
+        await Tone.context.resume()
+        if(audioStream) {
+          audioStream.volume.value = 0
         }
+      }
 
-        if(audioBuffer) {
+      if(audioBuffer) {
 
-          player.start();
-        } 
-        
-
-        console.log('player', player)
-      });
-    } else {
-          console.log('no audio')
-        }
+        player.start();
+      } 
+      console.log('player', player)
+    });
   }
 
   function stop() {
@@ -224,13 +266,14 @@
     if (recordStatus.isRecording) {
       recoredSrc = recordStatus.stop;
       // toneMic.mute = false;
-      powerStatus.toneMicMute = false
       startRecord();
     } else {
       recoredSrc = recordStatus.record;
       stopRecord();
       // toneMic.mute = true;
       powerStatus.toneMicMute = true
+      // if(toneContext.state === 'running') {
+      // }
 
 
     }
@@ -248,21 +291,15 @@
       toneRecorder = new Tone.Recorder();
       audioStream.volume.value = 0
       toneMic.connect(toneRecorder);
+      powerStatus.toneMicMute = false
+
     }
     /**
      * toneRecorder.state = 'started/stopped'
      * toneRecorder.context.state = 'suspended/running'
     */
     console.log('recorder started', toneRecorder)
-    /**
-     * check if context state = 'running/stopped'
-    */
-    // if(toneMic.mute) {
-    //   toneMic.mute = false
-    // }
-    if(audioStream) {
-      audioStream.volume.value = 0
-    }
+
     if(reverb) {
       reverb.connect(toneRecorder)
       console.log('recording w/ reverb', reverb)
@@ -283,33 +320,35 @@
     await toneRecorder.start();
   }
 
+  function shouldSuspendWhenEffectStatusOff() {
+    // suspend if no effects 
+    let shouldSuspend = false;
+    if (!reverbStatus.reverbOn) {
+      shouldSuspend = true
+    }
+    if (!chorusStatus.chorusOn) {
+      shouldSuspend = true
+    }
+    if (!delayStatus.delayOn) {
+      shouldSuspend = true
+    }
+    if (!dirtStatus.dirtOn) {
+      shouldSuspend = true
+    }
+    return shouldSuspend;
+  }
+
   async function stopRecord() {
     // if(toneRecordBlob) {
     //   toneRecordBlob = "";
     // }
-    console.log('recorder stopped', toneRecorder)
     toneRecordBlob = await toneRecorder.stop();
-    // console.log("stop record tonecontext::", toneContext);
-    /**
-     * these cause not playing back 1st recording after starting record 2nd time
-     * currently will play 1st recording, after 2nd recording started and stopped
-     */
-    // await toneMic.disconnect(toneRecorder);
-    // toneRecorder.dispose()
     
-    /** 
-     * need to context.resume when start record a second time.
-    */
-    // Tone.context.dispose();
-    // toneContext.rawContext.suspend();
-    toneMic.disconnect(toneRecorder)
-    toneRecorder.dispose()
+    await toneMic.disconnect(toneRecorder)
+    await toneRecorder.dispose()
     toneRecorder = null;
-
-    // if(!toneMic.mute) {
-    //   toneMic.mute = true;
-    // }
-   
+    
+    console.log('recorder stopped:::', toneRecorder, ":::tonecontext::", toneContext.state)
     /**
      * close cause effects to not be available
     */
@@ -338,8 +377,8 @@
       console.log('start reverb')
       reverb = new Tone.Reverb({
         wet: 1,
-        decay: .9,
-        preDelay: .4,
+        decay: .5,
+        preDelay: 0,
       }).toDestination();
     }
   }
@@ -438,7 +477,7 @@
     }
 
     if(!chorus || chorus['_wasDisposed'] === true) {
-      chorus = new Tone.Chorus(2, .1, 1).toDestination();
+      chorus = new Tone.Chorus(1, 0, 1).toDestination();
       await Tone.context.resume()
       console.log('...connecting chorus')
       // toneMic.connect(reverb);
@@ -548,6 +587,7 @@
               <img src="public\icons8-radio-tower-48.png" />
             </button>
             <button on:click={getMediaDevice}>start</button>
+            <button on:click={createWaveShaperDistorion}>bitcrusher</button>
             <!-- <img src="public\icons8-radio-tower-48.png" /> -->
           </div>
         </Col>
