@@ -9,8 +9,13 @@
   import * as Tone from "tone";
   import { saveAs } from "file-saver";
   import * as encoder from "audio-encoder";
-    import { Oscillator } from 'tone';
-
+  // import { Oscillator } from 'tone';
+  import Range from "./lib/Range.svelte"
+  
+  let value = 0;
+  let value2 = 0;
+  let value3 = 0;
+  let value4 = 0;
   let toneRecorder = null;
   let toneMic;
   let toneContext;
@@ -18,8 +23,13 @@
   let player;
   let audioStream;
   let reverb = null;
+  let autoFilter = null;
+  let sw = null;
+  let vib = null;
   let delay = null;
   let chorus = null;
+  let phaser = null;
+  let ps = null;
   let dirt = null;
   let active = true
   let activeCtrls = true
@@ -134,7 +144,7 @@
     let ctx = new AudioContext()
     let oscillator1 = new OscillatorNode(ctx);
     let bitCrusher = new WaveShaperNode(ctx)
-    // oscillator1.connect(bitCrusher).connect(ctx.destination)
+    oscillator1.connect(bitCrusher).connect(ctx.destination)
     toneMic.connect(bitCrusher)
 
     // start oscillator1
@@ -311,6 +321,8 @@
     }
     if(chorus) {
       chorus.connect(toneRecorder);
+      ps.connect(toneRecorder);
+      phaser.connect(toneRecorder)
       console.log('recording w/ chrs', chorus)
     }
     if(dirt) {
@@ -378,8 +390,8 @@
       console.log('start reverb')
       reverb = new Tone.Reverb({
         wet: 1,
-        decay: 2,
-        preDelay: 0,
+        decay: 5,
+        preDelay: .3
       }).toDestination();
     }
   }
@@ -488,17 +500,48 @@
       //     audioStream.volume.value = 0
       //   }
       // }
-      const options = { frequency: 20, delayTime: 20, depth: 1, wet: 1, spread: 600 };
+      console.log('value:::::', value)
+      const options = { frequency: value, delayTime: value2, depth: 1, wet: .2, spread: 180 };
       chorus = new Tone.Chorus(options).toDestination();
+      phaser = new Tone.Phaser({
+        frequency: 1000,
+        octaves: 4,
+        baseFrequency: 2500
+      }).toDestination();
+
+      autoFilter = new Tone.AutoFilter("1n").toDestination().start();
+
+      sw = new Tone.StereoWidener(1).toDestination()
+
+      vib = new Tone.Vibrato(100, .5);
+
+
       // console.log('...connecting chorus new params:::::')
+      // const psoptions = { delayTime: .1, windowSize: .03, pitch: 5 };
+
+      // ps = new Tone.PitchShift(psoptions).toDestination()
       
       toneMic.connect(chorus);
+      toneMic.connect(phaser);
+      toneMic.connect(sw);
+      toneMic.connect(vib)
+      toneMic.connect(autoFilter)
+      // toneMic.connect(ps)
+
       console.log("chours", chorus);
 
     } else {
       powerStatus.toneMicMute = true;
       chorus.disconnect()
       chorus.dispose()
+      phaser.disconnect()
+      phaser.dispose()
+      sw.disconnect()
+      sw.dispose()
+      vib.disconnect()
+      vib.dispose()
+      autoFilter.disconnect()
+      autoFilter.dispose()
       chorus = null;
       console.log("chours", chorus);
     }
@@ -520,7 +563,9 @@
     }
 
     if(!dirt || dirt['_wasDisposed'] === true) {
-      dirt = new Tone.Distortion(1).toDestination();
+      const options = { oversample: "4x", distortion: 1}
+      dirt = new Tone.Distortion(options).toDestination();
+      
 
       await Tone.context.resume()
       console.log('...connecting dirt')
@@ -565,6 +610,28 @@
       });
   }
 
+
+  function slideParam(p) {
+    value = p.detail
+    console.log('param::', value, 'p::::0', p)
+    // (e) => value = e.detail.value
+  }
+  function slideParam2(p) {
+    value2 = p.detail
+    console.log('param::', value2, 'p::::1', p)
+    // (e) => value = e.detail.value
+  }
+  function slideParam3(p) {
+    value3 = p.detail
+    console.log('param::', value3, 'p::::2', p)
+    // (e) => value = e.detail.value
+  }
+  function slideParam4(p) {
+    value4 = p.detail
+    console.log('param::', value4, 'p::::3', p)
+    // (e) => value = e.detail.value
+  }
+
 </script>
 
 
@@ -594,7 +661,7 @@
               <img src="public\icons8-radio-tower-48.png" />
             </button>
             <button style="background: none;" on:click={getMediaDevice}>start</button>
-            <button style="background: none;" on:click={createWaveShaperDistorion}>bitcrusher</button>
+            <!-- <button style="background: none;" on:click={createWaveShaperDistorion}>bitcrusher</button> -->
             <!-- <img src="public\icons8-radio-tower-48.png" /> -->
           </div>
         </Col>
@@ -665,6 +732,10 @@
             <button on:click={toggleReverb}>
               <img src={reverbStatus.reverbImgSrc} title="Turn Reverb On/Off" />
               <h6 class="modal-ctrls--effects">Reverb</h6>
+              <Range on:change={slideParam} id="basic-slider" />
+              <Range on:change={slideParam2} id="basic-slider2" />
+              <Range on:change={slideParam3} id="basic-slider3" />
+              <Range on:change={slideParam4} id="basic-slider4" />
             </button>
   
             <button on:click={toggleDelay}>
@@ -683,6 +754,10 @@
               <!-- svelte-ignore a11y-missing-attribute -->
               <img src={chorusStatus.chorusImgSrc} />
               <h6 class="modal-ctrls--effects">Chorus</h6>
+              <Range on:change={slideParam} id="basic-slider" />
+              <Range on:change={slideParam2} id="basic-slider2" />
+              <Range on:change={slideParam3} id="basic-slider3" />
+              <Range on:change={slideParam4} id="basic-slider4" />
             </button>
   
             <button on:click={toggleDirt}>
