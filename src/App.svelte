@@ -265,6 +265,7 @@
 
     if (recordStatus.isRecording) {
       recoredSrc = recordStatus.stop;
+      console.log('recording')
       // toneMic.mute = false;
       startRecord();
     } else {
@@ -377,7 +378,7 @@
       console.log('start reverb')
       reverb = new Tone.Reverb({
         wet: 1,
-        decay: .5,
+        decay: 2,
         preDelay: 0,
       }).toDestination();
     }
@@ -477,19 +478,25 @@
     }
 
     if(!chorus || chorus['_wasDisposed'] === true) {
-      chorus = new Tone.Chorus(1, 0, 1).toDestination();
       await Tone.context.resume()
-      console.log('...connecting chorus')
-      // toneMic.connect(reverb);
-      if(toneContext.state === 'running') {
-        if(audioStream) {
+      powerStatus.toneMicMute = false;
+      if(audioStream) {
           audioStream.volume.value = 0
         }
-      }
+      // if(toneContext.state === 'running') {
+      //   if(audioStream) {
+      //     audioStream.volume.value = 0
+      //   }
+      // }
+      const options = { frequency: 20, delayTime: 20, depth: 1, wet: 1, spread: 600 };
+      chorus = new Tone.Chorus(options).toDestination();
+      // console.log('...connecting chorus new params:::::')
+      
       toneMic.connect(chorus);
       console.log("chours", chorus);
 
     } else {
+      powerStatus.toneMicMute = true;
       chorus.disconnect()
       chorus.dispose()
       chorus = null;
@@ -586,8 +593,8 @@
               Song Pad
               <img src="public\icons8-radio-tower-48.png" />
             </button>
-            <button on:click={getMediaDevice}>start</button>
-            <button on:click={createWaveShaperDistorion}>bitcrusher</button>
+            <button style="background: none;" on:click={getMediaDevice}>start</button>
+            <button style="background: none;" on:click={createWaveShaperDistorion}>bitcrusher</button>
             <!-- <img src="public\icons8-radio-tower-48.png" /> -->
           </div>
         </Col>
@@ -724,7 +731,7 @@
   input[type="reset"],
   input[type="submit"],
   button {
-    background-color: #6684ff !important;
+    /* background-color: #6684ff !important; */
     border: none;
     min-width: 95px;
     max-width: 95px;
