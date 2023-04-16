@@ -4,7 +4,7 @@
   
     // Props
     export let min = 0;
-    export let max = 10000;
+    export let max = 20000;
     export let initialValue = 0;
     export let id = null;
     export let value =
@@ -188,6 +188,7 @@
     >
       <div class="range__track" bind:this={container}>
         <div class="range__track--highlighted" bind:this={progressBar} />
+        <!-- svelte-ignore a11y-mouse-events-have-key-events -->
         <div
           class="range__thumb"
           class:range__thumb--holding={holding}

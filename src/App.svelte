@@ -16,6 +16,11 @@
   let value2 = 0;
   let value3 = 0;
   let value4 = 0;
+  let chorusFrequency = 0;
+  let chorusAmt = 0;
+  let chorusDelay = 0;
+  let chorusSpread = 0;
+  let chorusDepth = 0;
   let toneRecorder = null;
   let toneMic;
   let toneContext;
@@ -23,6 +28,9 @@
   let player;
   let audioStream;
   let reverb = null;
+  let revPre = 0;
+  let revAmt = 0;
+  let revDecay = 0;
   let autoFilter = null;
   let sw = null;
   let vib = null;
@@ -107,6 +115,7 @@
      * 
      * if suspended -> await Tone.context.resume();
     */
+  
   $: if(powerStatus.micOn) {
     console.log('powerstatus tonecontext state', toneContext.state)
     console.log('powerstatus tonecontext state', toneContext)
@@ -168,6 +177,13 @@
     // asign curve values to bitchrusher curve
     bitCrusher.curve = curve
 
+  }
+
+  async function releaseMediaDevice() {
+    //todo release usermedia references from getUserMedia
+    if(toneMic) {
+      toneMic.dispose();
+    }
   }
 
   async function getMediaDevice() {
@@ -389,9 +405,9 @@
     if (!reverb || reverb['_wasDisposed'] === true) {
       console.log('start reverb')
       reverb = new Tone.Reverb({
-        wet: 1,
-        decay: 5,
-        preDelay: .3
+        wet: revAmt,
+        decay: revDecay,
+        preDelay: revPre
       }).toDestination();
     }
   }
@@ -500,20 +516,25 @@
       //     audioStream.volume.value = 0
       //   }
       // }
-      console.log('value:::::', value)
-      const options = { frequency: value, delayTime: value2, depth: 1, wet: .2, spread: 180 };
+      
+      const options = { frequency: chorusFrequency, delayTime: chorusDelay, depth: chorusDepth, wet: chorusAmt, spread: chorusSpread };
       chorus = new Tone.Chorus(options).toDestination();
-      phaser = new Tone.Phaser({
-        frequency: 1000,
-        octaves: 4,
-        baseFrequency: 2500
-      }).toDestination();
 
-      autoFilter = new Tone.AutoFilter("1n").toDestination().start();
+      const autoFilter = new Tone.AutoFilter("1n").toDestination().start();
+      
+      // chorus = new Tone.Chorus(4, 2.5, 0.5).toDestination();
+      
+      // phaser = new Tone.Phaser({
+      //   frequency: 1000,
+      //   octaves: 4,
+      //   baseFrequency: 2500
+      // }).toDestination();
 
-      sw = new Tone.StereoWidener(1).toDestination()
+      // autoFilter = new Tone.AutoFilter("1n").toDestination().start();
 
-      vib = new Tone.Vibrato(100, .5);
+      // sw = new Tone.StereoWidener(1).toDestination()
+
+      // vib = new Tone.Vibrato(100, .5);
 
 
       // console.log('...connecting chorus new params:::::')
@@ -522,10 +543,11 @@
       // ps = new Tone.PitchShift(psoptions).toDestination()
       
       toneMic.connect(chorus);
-      toneMic.connect(phaser);
-      toneMic.connect(sw);
-      toneMic.connect(vib)
       toneMic.connect(autoFilter)
+      // toneMic.connect(phaser);
+      // toneMic.connect(sw);
+      // toneMic.connect(vib)
+      // toneMic.connect(autoFilter)
       // toneMic.connect(ps)
 
       console.log("chours", chorus);
@@ -534,14 +556,14 @@
       powerStatus.toneMicMute = true;
       chorus.disconnect()
       chorus.dispose()
-      phaser.disconnect()
-      phaser.dispose()
-      sw.disconnect()
-      sw.dispose()
-      vib.disconnect()
-      vib.dispose()
-      autoFilter.disconnect()
-      autoFilter.dispose()
+      // phaser.disconnect()
+      // phaser.dispose()
+      // sw.disconnect()
+      // sw.dispose()
+      // vib.disconnect()
+      // vib.dispose()
+      // autoFilter.disconnect()
+      // autoFilter.dispose()
       chorus = null;
       console.log("chours", chorus);
     }
@@ -612,25 +634,66 @@
 
 
   function slideParam(p) {
-    value = p.detail
-    console.log('param::', value, 'p::::0', p)
+    console.log('param before::', chorusFrequency, 'p::::0', p)
+
+    // p.stopPropagation()
+    chorusFrequency = p.target.value
+    console.log('param::', chorusFrequency, 'p::::0', p)
     // (e) => value = e.detail.value
   }
   function slideParam2(p) {
-    value2 = p.detail
-    console.log('param::', value2, 'p::::1', p)
+    chorusDelay = p.target.value
+    console.log('param::', chorusDelay, 'p::::1', p)
     // (e) => value = e.detail.value
   }
   function slideParam3(p) {
-    value3 = p.detail
-    console.log('param::', value3, 'p::::2', p)
+    chorusAmt = p.target.value
+    console.log('param::', chorusAmt, 'p::::2', p)
     // (e) => value = e.detail.value
   }
   function slideParam4(p) {
-    value4 = p.detail
-    console.log('param::', value4, 'p::::3', p)
+    chorusSpread = p.target.value
+    console.log('param::', chorusSpread, 'p::::3', p)
     // (e) => value = e.detail.value
   }
+  function slideParam5(p) {
+    chorusDepth = p.target.value
+    console.log('param::', chorusDepth, 'p::::4', p)
+    // (e) => value = e.detail.value
+  }
+
+
+  function slideParamRevDec(p) {
+    console.log('param before::', revDecay, 'p::::0', p)
+  
+    revDecay = p.target.value
+    console.log('param reverb decay::', revDecay, 'p::::0', p)
+    // (e) => value = e.detail.value
+    // p.preventDefault()
+    // p.stopPropagation()
+  }
+
+  function slideParamRevPre(p) {
+    console.log('param before::', revPre, 'p::::0', p)
+   
+    revPre = p.target.value
+    console.log('param reverb revPre::', revPre, 'p::::0', p)
+    // (e) => value = e.detail.value
+    // p.preventDefault()
+    // p.stopPropagation()
+  }
+
+  function slideParamRevAmt(p) {
+    console.log('param before::', revAmt, 'p::::0', p)
+   
+    revAmt = p.target.value
+    console.log('param reverb revAmt::', revAmt, 'p::::0', p)
+    // (e) => value = e.detail.value
+    // p.preventDefault()
+    // p.stopPropagation()
+  }
+
+  
 
 </script>
 
@@ -661,6 +724,7 @@
               <img src="public\icons8-radio-tower-48.png" />
             </button>
             <button style="background: none;" on:click={getMediaDevice}>start</button>
+            <button style="background: none;" on:click={releaseMediaDevice}>stop</button>
             <!-- <button style="background: none;" on:click={createWaveShaperDistorion}>bitcrusher</button> -->
             <!-- <img src="public\icons8-radio-tower-48.png" /> -->
           </div>
@@ -724,47 +788,108 @@
       <div class:active transition:fade>
       <!-- <div class:active style="margin-top: 10px;" transition:fade> -->
         <!-- <Row style="margin-bottom: 10px;"> -->
+        <!-- Reverb Delay-->
         <Row>
           <Col size="5"></Col>
-          <!-- Reverb Delay-->
+         
           <div class="app-ctrls--main space">
             <!-- svelte-ignore a11y-missing-attribute -->
+           <div>
             <button on:click={toggleReverb}>
               <img src={reverbStatus.reverbImgSrc} title="Turn Reverb On/Off" />
               <h6 class="modal-ctrls--effects">Reverb</h6>
-              <Range on:change={slideParam} id="basic-slider" />
+             
+              <!-- <Range on:change={slideParam} id="basic-slider" />
               <Range on:change={slideParam2} id="basic-slider2" />
               <Range on:change={slideParam3} id="basic-slider3" />
-              <Range on:change={slideParam4} id="basic-slider4" />
+              <Range on:change={slideParam4} id="basic-slider4" /> -->
             </button>
+            <div>
+              <input type="range" id="chF" name="chF"
+                   step=".01"  min="0" max=".20" bind:value={revPre} on:input={slideParamRevPre}>
+            </div>
+            <div>
+              <input type="range" id="chD" name="chD"
+                   step=".5"  min="0" max="5" bind:value={revDecay} on:input={slideParamRevDec}>
+            </div>
+            <div>
+              <input type="range" id="chD" name="chD"
+                   step=".1"  min="0" max="1" bind:value={revAmt} on:input={slideParamRevAmt}>
+            </div>
+           </div>
   
-            <button on:click={toggleDelay}>
-              <!-- svelte-ignore a11y-missing-attribute -->
-              <img src={delayStatus.delayImgSrc} />
-              <h6 class="modal-ctrls--effects">Delay</h6>
-            </button>
+           
+            <div>
+              <button on:click={toggleDelay}>
+                <!-- svelte-ignore a11y-missing-attribute -->
+                <img src={delayStatus.delayImgSrc} />
+                <h6 class="modal-ctrls--effects">Delay</h6>
+              </button>
+              <!-- <div>
+                <input type="range" id="chF" name="chF"
+                     step=".1"  min="0" max="500" bind:value={revPre} on:input={slideParamRevPre}>
+              </div>
+              <div>
+                <input type="range" id="chD" name="chD"
+                     step=".1"  min="0" max="500" bind:value={revDecay} on:input={slideParamRevDec}>
+              </div> -->
+            </div>
           </div>
         </Row>
   
+        <!-- Chorus Distortion -->
         <Row>
           <Col size="5"></Col>
-          <!-- Chorus Distortion -->
+          
           <div class="app-ctrls--main">
+           <div>
             <button on:click={toggleChours}>
               <!-- svelte-ignore a11y-missing-attribute -->
               <img src={chorusStatus.chorusImgSrc} />
               <h6 class="modal-ctrls--effects">Chorus</h6>
-              <Range on:change={slideParam} id="basic-slider" />
+             
+              <!-- <Range on:change={slideParam} id="basic-slider" />
               <Range on:change={slideParam2} id="basic-slider2" />
               <Range on:change={slideParam3} id="basic-slider3" />
-              <Range on:change={slideParam4} id="basic-slider4" />
+              <Range on:change={slideParam4} id="basic-slider4" /> -->
             </button>
+            <div>
+              <input type="range" id="chF" name="chF"
+                   step=".1"  min="0" max="10" bind:value={chorusFrequency} on:input={slideParam}>
+            </div>
+            <div>
+              <input type="range" id="chD" name="chD"
+                     min="0" max="20" bind:value={chorusDelay} on:input={slideParam2}>
+            </div>
+            <div>
+              <input type="range" id="chS" name="chA"
+                    step=".1" min="0" max="1" bind:value={chorusAmt} on:input={slideParam3}>
+            </div>
+            <div>
+              <input type="range" id="chA" name="chA"
+                    step="20" min="0" max="180" bind:value={chorusSpread} on:input={slideParam4}>
+            </div>
+            <div>
+              <input type="range" id="chA" name="chA"
+                    step=".1" min="0" max="1" bind:value={chorusDepth} on:input={slideParam5}>
+            </div>
+           </div>
   
+           <div>
             <button on:click={toggleDirt}>
               <!-- svelte-ignore a11y-missing-attribute -->
               <img src={dirtStatus.dirtImgSrc} />
               <h6 class="modal-ctrls--effects">Dirt</h6>
             </button>
+            <!-- <div>
+              <input type="range" id="chF" name="chF"
+                   step=".1"  min="0" max="500" bind:value={revPre} on:input={slideParamRevPre}>
+            </div>
+          </div>
+            <div>
+              <input type="range" id="chD" name="chD"
+                   step=".1"  min="0" max="500" bind:value={revDecay} on:input={slideParamRevDec}>
+            </div> -->
           </div>
         </Row>
       </div>
