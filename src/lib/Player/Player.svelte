@@ -1,5 +1,4 @@
 <script>
-    // todo pass in properties (context, blob, etc) from main component
   let player
   let playStatus = { 
     isPlaying: false,
@@ -11,13 +10,11 @@
   async function play() {
     toneRecordBlob
       .arrayBuffer()
-      // decode is expensive - does tone make it faster - can this passed to worker
       .then((arrayBuffer) => toneContext.decodeAudioData(arrayBuffer))
       .then(async (audioBuffer) => {
         console.log("blob", audioBuffer);
         await Tone.context.resume();
 
-        // not need to be new player each time.
         if(!player) {
           player = new Tone.Player({ url: audioBuffer }).toDestination();
         }
@@ -44,9 +41,7 @@
   }
 </script>
 
-
 <!-- html -->
-
 <button  on:click={togglePlayStatus}>
     <!-- svelte-ignore a11y-missing-attribute -->
     <img src={playSrc}  />
