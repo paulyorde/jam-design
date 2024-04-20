@@ -9,7 +9,6 @@
   import * as Tone from "tone";
   import { saveAs } from "file-saver";
   import * as encoder from "audio-encoder";
-  // import { Oscillator } from 'tone';
   import Range from "./lib/Range.svelte"
   
   let value = 0;
@@ -46,7 +45,6 @@
     isRecording: false,
     record: "https://icongr.am/jam/mic-f.svg?size=45&color=f5f0f0",
     stop: "https://icongr.am/jam/mic-f.svg?size=45&color=e2ef0b",
-    // stop: "https://icongr.am/jam/stop.svg?size=45&color=e2ef0b",
   };
   let recoredSrc = recordStatus.record;
   let playStatus = {
@@ -84,37 +82,6 @@
     dirtImgSrcOff: "https://icongr.am/jam/power.svg?size=30&color=f5f0f0",
     dirtImgSrc: "https://icongr.am/jam/power.svg?size=30&color=f5f0f0"
   }
-  // let effectStatus = {
-    
-    
-  // };
-
-  /**
-   * $: = listener to exec code and update properties 
-  */
-
-
-  /**
-   * NOTES
-   * outputLatency = time till speakers produce sound
-  */
-  
-    /**
-     * listener $effect
-     * example recorder
-     * would enable mic to be muted on delay when mic status changes w/o effects knowledge
-     * could disconnect effects on record stop
-     * 
-     * OR
-     * 
-     * audioContextState = toneContext.state = running || suspended
-     * audioStreamState = toneMic.state = stopped || started
-     * 
-     * suspend/stop when nothing in use
-     * otherwise just disconnect and dispose
-     * 
-     * if suspended -> await Tone.context.resume();
-    */
   
   $: if(powerStatus.micOn) {
     console.log('powerstatus tonecontext state', toneContext.state)
@@ -156,9 +123,7 @@
     oscillator1.connect(bitCrusher).connect(ctx.destination)
     toneMic.connect(bitCrusher)
 
-    // start oscillator1
     oscillator1.start()
-    // change input parameter w/ slider
 
     // create samples, curve, levels
     let x;
@@ -172,15 +137,12 @@
       y = Math.floor(x)
       curve[n] = (2*y+1)/nLevels-1
     }
-    // generate curve values
-
-    // asign curve values to bitchrusher curve
+   
     bitCrusher.curve = curve
 
   }
 
   async function releaseMediaDevice() {
-    //todo release usermedia references from getUserMedia
     if(toneMic) {
       toneMic.dispose();
     }
@@ -194,8 +156,6 @@
      * start the Audio Context state = 'running'
     */
     await Tone.start();
-    // await Tone.context.resume();
-
 
     if (!toneMic) {
       toneMic = new Tone.UserMedia({volume: -30, mute: true}).toDestination();
@@ -203,16 +163,9 @@
       toneContext = Tone.context;
       audioStream = await toneMic.open();
       console.log("mic", audioStream);
-
-      // console.log('chicken or egg')
     }
   }
 
-  /**
-   * todo 
-   * don't switch imgSrc if no audio 
-   * user message - no audio 
-   */
   function togglePlayStatus() {
     
     if (toneRecordBlob) {
@@ -235,19 +188,11 @@
   async function play() {
     toneRecordBlob
     .arrayBuffer()
-    // decode is expensive - does tone make it faster - can this passed to worker
     .then((arrayBuffer) => toneContext.decodeAudioData(arrayBuffer))
     .then(async (audioBuffer) => {
       console.log("blob", audioBuffer);
 
-      /** 
-       * todo:
-       * only needs one player
-       * needs the new url of next recording
-      */
-      // if(!player) {
       player = new Tone.Player({ url: audioBuffer }).toDestination();
-      // }
 
       if(toneContext.state === 'running') {
         console.log('player should be started', player.state)
@@ -268,9 +213,6 @@
   }
 
   function stop() {
-    // if(!toneMic.mute) {
-    //       toneMic.mute = true
-    //     }
     player.stop();
     console.log("stop");
     toneContext.rawContext.suspend();
@@ -292,17 +234,11 @@
     if (recordStatus.isRecording) {
       recoredSrc = recordStatus.stop;
       console.log('recording')
-      // toneMic.mute = false;
       startRecord();
     } else {
       recoredSrc = recordStatus.record;
       stopRecord();
-      // toneMic.mute = true;
       powerStatus.toneMicMute = true
-      // if(toneContext.state === 'running') {
-      // }
-
-
     }
   }
 
@@ -368,9 +304,6 @@
   }
 
   async function stopRecord() {
-    // if(toneRecordBlob) {
-    //   toneRecordBlob = "";
-    // }
     toneRecordBlob = await toneRecorder.stop();
     
     await toneMic.disconnect(toneRecorder)
@@ -378,10 +311,6 @@
     toneRecorder = null;
     
     console.log('recorder stopped:::', toneRecorder, ":::tonecontext::", toneContext.state)
-    /**
-     * close cause effects to not be available
-    */
-    // toneMic.close();
   }
 
   function toggleReverbStatus() {
@@ -390,7 +319,6 @@
       powerStatus.toneMicMute = true;
       reverbStatus.reverbImgSrc = reverbStatus.reverbImgSrcOff;
       disconnectReverb()
-      // reverb = null
       console.log("reverb status on should be false", reverbStatus.reverbOn);
     } else {
       reverbStatus.reverbOn = true;
@@ -418,7 +346,6 @@
   async function connectReverb() {
     await Tone.context.resume()
     console.log('...connecting reverb')
-    // toneMic.connect(reverb);
     if(toneContext.state === 'running') {
       if(audioStream) {
         audioStream.volume.value = 0
@@ -434,30 +361,16 @@
   }
 
   function disconnectReverb() {
-    /**
-     * todo: ture mic on for record if reverb is stopped while recording 
-     * need to suspend reverb? 
-     * unmute mic
-     */
-    // toneMic.mute = true;
     toneMic.disconnect(reverb)
     reverb.dispose()
     if(reverb['_wasDisposed'] === true) {
       console.log('reverb was dispposed')
-      // reverb.disconnect(toneRecorder)
-
     }
     reverb = null
 
     console.log('reverb node', reverb)
   }
 
-  /**
-   * todo
-   * start effects first , then start record.
-   * 
-   * in recorder listener: if(reverb) reverb.connect(toneRecorder) else // reverb.disconnect(toneRecorder);
-   */
   async function toggleReverb() {
     createReverb()
     toggleReverbStatus()
@@ -511,44 +424,11 @@
       if(audioStream) {
           audioStream.volume.value = 0
         }
-      // if(toneContext.state === 'running') {
-      //   if(audioStream) {
-      //     audioStream.volume.value = 0
-      //   }
-      // }
       
       const options = { frequency: chorusFrequency, delayTime: chorusDelay, depth: chorusDepth, wet: chorusAmt, spread: chorusSpread };
       chorus = new Tone.Chorus(options).toDestination();
 
       const autoFilter = new Tone.AutoFilter("1n").toDestination().start();
-      
-      // chorus = new Tone.Chorus(4, 2.5, 0.5).toDestination();
-      
-      // phaser = new Tone.Phaser({
-      //   frequency: 1000,
-      //   octaves: 4,
-      //   baseFrequency: 2500
-      // }).toDestination();
-
-      // autoFilter = new Tone.AutoFilter("1n").toDestination().start();
-
-      // sw = new Tone.StereoWidener(1).toDestination()
-
-      // vib = new Tone.Vibrato(100, .5);
-
-
-      // console.log('...connecting chorus new params:::::')
-      // const psoptions = { delayTime: .1, windowSize: .03, pitch: 5 };
-
-      // ps = new Tone.PitchShift(psoptions).toDestination()
-      
-      toneMic.connect(chorus);
-      toneMic.connect(autoFilter)
-      // toneMic.connect(phaser);
-      // toneMic.connect(sw);
-      // toneMic.connect(vib)
-      // toneMic.connect(autoFilter)
-      // toneMic.connect(ps)
 
       console.log("chours", chorus);
 
@@ -556,14 +436,6 @@
       powerStatus.toneMicMute = true;
       chorus.disconnect()
       chorus.dispose()
-      // phaser.disconnect()
-      // phaser.dispose()
-      // sw.disconnect()
-      // sw.dispose()
-      // vib.disconnect()
-      // vib.dispose()
-      // autoFilter.disconnect()
-      // autoFilter.dispose()
       chorus = null;
       console.log("chours", chorus);
     }
@@ -571,7 +443,6 @@
 
   /**
    * https://tonejs.github.io/docs/14.7.77/Distortion
-   * todo: research options overtone , input:gain, wet/dry to fix latency
    */
   async function toggleDirt() {
     if(dirtStatus.dirtOn) {
@@ -606,12 +477,6 @@
     }
   }
 
-  /**
-   * V2
-   * download to computer
-   * OR
-   * dowload to track pad (vrs, chrs, bridge, etc)
-   */
    async function download() {
     console.log("blob");
     toneRecordBlob
@@ -636,30 +501,24 @@
   function slideParam(p) {
     console.log('param before::', chorusFrequency, 'p::::0', p)
 
-    // p.stopPropagation()
     chorusFrequency = p.target.value
     console.log('param::', chorusFrequency, 'p::::0', p)
-    // (e) => value = e.detail.value
   }
   function slideParam2(p) {
     chorusDelay = p.target.value
     console.log('param::', chorusDelay, 'p::::1', p)
-    // (e) => value = e.detail.value
   }
   function slideParam3(p) {
     chorusAmt = p.target.value
     console.log('param::', chorusAmt, 'p::::2', p)
-    // (e) => value = e.detail.value
   }
   function slideParam4(p) {
     chorusSpread = p.target.value
     console.log('param::', chorusSpread, 'p::::3', p)
-    // (e) => value = e.detail.value
   }
   function slideParam5(p) {
     chorusDepth = p.target.value
     console.log('param::', chorusDepth, 'p::::4', p)
-    // (e) => value = e.detail.value
   }
 
 
@@ -668,9 +527,6 @@
   
     revDecay = p.target.value
     console.log('param reverb decay::', revDecay, 'p::::0', p)
-    // (e) => value = e.detail.value
-    // p.preventDefault()
-    // p.stopPropagation()
   }
 
   function slideParamRevPre(p) {
@@ -678,9 +534,6 @@
    
     revPre = p.target.value
     console.log('param reverb revPre::', revPre, 'p::::0', p)
-    // (e) => value = e.detail.value
-    // p.preventDefault()
-    // p.stopPropagation()
   }
 
   function slideParamRevAmt(p) {
@@ -688,21 +541,8 @@
    
     revAmt = p.target.value
     console.log('param reverb revAmt::', revAmt, 'p::::0', p)
-    // (e) => value = e.detail.value
-    // p.preventDefault()
-    // p.stopPropagation()
   }
-
-  
-
 </script>
-
-
-<!-- todo 
-  ** setup responsive 
-* create one container/wrapper
-* move buttons to seperate columns
--->
 
 <Container>
   <main>
